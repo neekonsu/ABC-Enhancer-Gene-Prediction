@@ -41,5 +41,5 @@ ENV PATH=/usr/src/app/bedtools2/bin/:${PATH}
 WORKDIR /usr/src/app/
 
 # Install MACS2
-#RUN pip install MACS2 
+RUN pip install MACS2 
 #RUN git clone https://github.com/taoliu/MACS.git && git checkout macs2python3
