@@ -1,0 +1,48 @@
+#!/bin/bash
+
+cd /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution
+tmpDir=$(mkdir -p "/cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/tmp.134065ba" && echo "/cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/tmp.134065ba")
+chmod 777 "$tmpDir"
+export _JAVA_OPTIONS=-Djava.io.tmpdir="$tmpDir"
+export TMPDIR="$tmpDir"
+export HOME="$HOME"
+(
+cd /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution
+
+)
+out7c1ed274="${tmpDir}/out.$$" err7c1ed274="${tmpDir}/err.$$"
+mkfifo "$out7c1ed274" "$err7c1ed274"
+trap 'rm "$out7c1ed274" "$err7c1ed274"' EXIT
+tee '/cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution/stdout' < "$out7c1ed274" &
+tee '/cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution/stderr' < "$err7c1ed274" >&2 &
+(
+cd /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution
+
+
+set -euo pipefail
+
+mkdir outputs
+
+python ../src/makeCandidateRegions.py \
+    --bam /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/inputs/344356579/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
+    --outDir outputs \
+    --chrom_sizes /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/inputs/-378025230/chr22 \
+    --regions_blacklist /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/inputs/-378025230/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
+    --regions_whitelist /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/inputs/-378025230/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
+    --pval_cutoff 0.1 \
+    --peakExtendFromSummit 250 \
+    --nStrongestPeaks 3000
+)  > "$out7c1ed274" 2> "$err7c1ed274"
+echo $? > /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution/rc.tmp
+(
+# add a .file in every empty directory to facilitate directory delocalization on the cloud
+cd /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution
+find . -type d -exec sh -c '[ -z "$(ls -A '"'"'{}'"'"')" ] && touch '"'"'{}'"'"'/.file' \;
+)
+(
+cd /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution
+sync
+
+
+)
+mv /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution/rc.tmp /cromwell-executions/ABCpipeline/7c1ed274-e5af-41cd-9861-82d5047091b8/call-makeCandidateRegions/execution/rc

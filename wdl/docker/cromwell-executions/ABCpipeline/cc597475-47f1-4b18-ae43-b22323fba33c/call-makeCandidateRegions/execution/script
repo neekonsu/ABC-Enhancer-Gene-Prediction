@@ -1,0 +1,48 @@
+#!/bin/bash
+
+cd /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution
+tmpDir=$(mkdir -p "/cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/tmp.8dc8b6ef" && echo "/cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/tmp.8dc8b6ef")
+chmod 777 "$tmpDir"
+export _JAVA_OPTIONS=-Djava.io.tmpdir="$tmpDir"
+export TMPDIR="$tmpDir"
+export HOME="$HOME"
+(
+cd /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution
+
+)
+outcc597475="${tmpDir}/out.$$" errcc597475="${tmpDir}/err.$$"
+mkfifo "$outcc597475" "$errcc597475"
+trap 'rm "$outcc597475" "$errcc597475"' EXIT
+tee '/cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution/stdout' < "$outcc597475" &
+tee '/cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution/stderr' < "$errcc597475" >&2 &
+(
+cd /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution
+
+
+set -euo pipefail
+
+mkdir outputs
+
+python src/makeCandidateRegions.py \
+    --bam /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/inputs/344356579/wgEncodeUwDnaseK562AlnRep1.chr22.bam \
+    --outDir outputs \
+    --chrom_sizes /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/inputs/-378025230/chr22 \
+    --regions_blacklist /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/inputs/-378025230/wgEncodeHg19ConsensusSignalArtifactRegions.bed \
+    --regions_whitelist /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/inputs/-378025230/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed \
+    --pval_cutoff 0.1 \
+    --peakExtendFromSummit 250 \
+    --nStrongestPeaks 3000
+)  > "$outcc597475" 2> "$errcc597475"
+echo $? > /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution/rc.tmp
+(
+# add a .file in every empty directory to facilitate directory delocalization on the cloud
+cd /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution
+find . -type d -exec sh -c '[ -z "$(ls -A '"'"'{}'"'"')" ] && touch '"'"'{}'"'"'/.file' \;
+)
+(
+cd /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution
+sync
+
+
+)
+mv /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution/rc.tmp /cromwell-executions/ABCpipeline/cc597475-47f1-4b18-ae43-b22323fba33c/call-makeCandidateRegions/execution/rc
