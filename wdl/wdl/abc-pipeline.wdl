@@ -14,6 +14,7 @@ workflow ABCpipeline {
         File h3k27ac_bam
         File expression_table
         File ubiq_genes
+        File HiCdirTar
         String cellType = "defCellType"
     }
 
@@ -32,7 +33,7 @@ workflow ABCpipeline {
            h3k27ac_bam = h3k27ac_bam,
            dnase_bam = dnaseqbam,
            expression_table = expression_table,
-	   chromosome_sizes = chrom_sizes,
+           chromosome_sizes = chrom_sizes,
            ubiq_genes = ubiq_genes,
            cellType = cellType
     }
@@ -41,7 +42,7 @@ workflow ABCpipeline {
         input:
             enhancerList = runNeighborhoods.enhancerList,
             geneList = runNeighborhoods.geneList,
-            HiCdir = "???",
+            HiCdirTar = HiCdirTar,
             cellType = cellType
     }
 
@@ -91,7 +92,7 @@ workflow ABCpipeline {
             docker: docker_image
             cpu: num_threads
             memory: mem_size
-            disks: "local-disk" + ceil(size(bam, "GiB")) * 1.2
+            disks: "local-disk" + ceil((size(bam, "GiB")) * 1.2)
         }
     }
 
@@ -136,7 +137,7 @@ task runNeighborhoods {
         docker: docker_image
         cpu: num_threads
         memory: mem_size
-        disks: "local-disk" + ceil(size(dnase_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2
+        disks: "local-disk" + ceil((size(dnase_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2)
     }
 }
 
@@ -144,16 +145,22 @@ task makePrediction {
     input {
         File enhancerList
         File geneList
-        # TODO this is a dir
-        File HiCdir
+        File HiCdirTar
         Float threshold = "0.022"
         String cellType 
     }
+
+    String docker_image = "quay.io/nbarkas/abc-general-container:latest"
+    Int num_threads = 1
+    String mem_size = "1 GB"
+
     command {
+        set -euo pipefail
+        tar -xf HiCdirTar
         python src/predict.py \
             --enhancers ~{enhancerList} \
             --genes ~{geneList} \
-            --HiCdir ~{HiCdir} \
+            --HiCdir "HiCdir" \
             --scale_hic_using_powerlaw \
             --threshold ~{threshold} \
             --cellType ~{cellType} \
@@ -166,6 +173,6 @@ task makePrediction {
         docker: docker_image
         cpu: num_threads
         memory: mem_size
-        disks: "local-disk" + ceil(size(dnase_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2
+        disks: "local-disk" + ceil(size(HiCdirTar, "GiB")) * 3
     }
 }
