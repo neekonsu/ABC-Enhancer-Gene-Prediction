@@ -37,6 +37,14 @@ workflow ABCpipeline {
            cellType = cellType
     }
 
+    call makePrediction {
+        input:
+            enhancerList = runNeighborhoods.enhancerList,
+            geneList = runNeighborhoods.geneList,
+            HiCdir = "???",
+            cellType = cellType
+    }
+
     output {
        File candidateRegions = makeCandidateRegions.candidateRegions
     }
@@ -123,6 +131,36 @@ task runNeighborhoods {
         # TODO: add remain outpus
         File enhancerList = "outputs/EnhancerList.txt"
         File geneList = "outputs/GeneList.txt"
+    }
+    runtime {
+        docker: docker_image
+        cpu: num_threads
+        memory: mem_size
+        disks: "local-disk" + ceil(size(dnase_bam, "GiB") + size(h3k27ac_bam, "GiB")) * 1.2
+    }
+}
+
+task makePrediction {
+    input {
+        File enhancerList
+        File geneList
+        # TODO this is a dir
+        File HiCdir
+        Float threshold = "0.022"
+        String cellType 
+    }
+    command {
+        python src/predict.py \
+            --enhancers ~{enhancerList} \
+            --genes ~{geneList} \
+            --HiCdir ~{HiCdir} \
+            --scale_hic_using_powerlaw \
+            --threshold ~{threshold} \
+            --cellType ~{cellType} \
+            --outdir outputs/
+    }
+    output {
+
     }
     runtime {
         docker: docker_image
