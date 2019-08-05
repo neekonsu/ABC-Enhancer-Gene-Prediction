@@ -1,0 +1,7 @@
+numpy
+pandas
+scipy
+intervaltree
+pysam 
+pyBigWig
+matplotlib
