@@ -1,3 +1,0 @@
-#!/bin/bash
-'/bin/bash' '/Users/myessail/broad/ABC-Enhancer-Gene-Prediction/cromwell-executions/ABCpipeline/851624a7-e31e-42a2-ad92-88190d8681da/call-makeCandidateRegions/execution/script.submit' < /dev/null || { rc=$?; if [ "$rc" -gt "128" ]; then echo $rc; else echo -1; fi } > /Users/myessail/broad/ABC-Enhancer-Gene-Prediction/cromwell-executions/ABCpipeline/851624a7-e31e-42a2-ad92-88190d8681da/call-makeCandidateRegions/execution/rc &
-echo $!
