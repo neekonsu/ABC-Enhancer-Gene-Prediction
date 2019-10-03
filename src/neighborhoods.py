@@ -22,7 +22,8 @@ def load_genes(file,
                expression_table_list,
                gene_id_names,
                primary_id,
-               cellType):
+               cellType, 
+               class_gene_file):
 
     bed = read_bed(file) 
     genes = process_gene_bed(bed, gene_id_names, primary_id, chrom_sizes)
@@ -201,10 +202,10 @@ def assign_enhancer_classes(enhancers, genes, tss_slop=500):
     # build pyranges df 
     tss_pyranges = pr.PyRanges(chromosomes=genes['chr'], starts=genes['tss'] - tss_slop, ends=genes['tss'] + tss_slop)
     gene_pyranges = pr.PyRanges(chromosomes= genes['chr'], starts=genes['start'], ends=genes['end'])
-#    def grab_symbol(overlaps):
-#        overlap = overlaps.df
-#        x = ",".join((str(overlap[i]) for i in overlap.columns))
-#        return x
+    def grab_symbol(overlaps):
+        overlap = overlaps.df
+        x = ",".join((str(overlap[i]) for i in overlap.columns))
+        return x
     def get_tss_symbol(enhancer, tss_pyranges = tss_pyranges):
        #For candidate regions that overlap gene promoters, annotate enhancers data table with the name of the gene.
        if enhancer["class"] == "promoter":
@@ -219,8 +220,8 @@ def assign_enhancer_classes(enhancers, genes, tss_slop=500):
         Returns numpy arrays representing cluster id for enhancers labelled genes/promoters'''
         genic_enh = enhancers.join(gene_pyranges, suffix="_genic")
         promoter_enh = enhancers.join(tss_pyranges, suffix="_promoter")
-        genes = np.array(genic_enh['Cluster'])
-        promoters = np.array(promoter_enh['Cluster'])
+        genes = np.array(genic_enh.Cluster)
+        promoters = np.array(promoter_enh.Cluster)
         return genes, promoters
 
     # label everything as intergenic
@@ -229,15 +230,20 @@ def assign_enhancer_classes(enhancers, genes, tss_slop=500):
     # use clustering as unique identifier for each enhancer region
     enh = enhancer.cluster()  
     genes, promoters = get_class_pyranges(enh)
-    enhancers = enh.df
+    enhancers = enh.df.rename(columns={'Chromosome':'chr', 'Start':'start', 'End':'end'})
     enhancers.loc[enhancers['Cluster'].isin(genes), 'class'] = 'genic'
     enhancers.loc[enhancers['Cluster'].isin(promoters), 'class'] = 'promoter' 
     
+    print(len(enhancers.loc[enhancers['class'] == 'genic']))
+    print(len(enhancers.loc[enhancers['class'] == 'promoter']))
+    print(len(enhancers.loc[enhancers['class'] == 'intergenic']))
+ 
     enhancers["isPromoterElement"] = enhancers["class"] == "promoter"
     enhancers["isGenicElement"] = enhancers["class"] == "genic"
     enhancers["isIntergenicElement"] = enhancers["class"] == "intergenic"
     enhancers["enhancerSymbol"] = enhancers.apply(get_tss_symbol, axis=1)
     assert (enhancers.enhancerSymbol == "\n").sum() == 0
+    # just to keep things consistent with original code 
     enhancers["name"] = enhancers.apply(lambda e: "{}|{}:{}-{}".format(e["class"], e.chr, e.start, e.end), axis=1)
     return(enhancers)
 
@@ -498,6 +504,7 @@ def determine_accessibility_feature(args):
     if args.default_accessibility_feature is not None:
         return args.default_accessibility_feature
     elif (args.ATAC is not None) and (args.DHS is not None):
+        print(args.ATAC)
         raise RuntimeError("Both DHS and ATAC have been provided. Must set one file to be the default accessibility feature!")
     elif (args.ATAC is not None):
         return "ATAC"
