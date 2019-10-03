@@ -27,7 +27,7 @@ def load_genes(file,
 
     bed = read_bed(file) 
     genes = process_gene_bed(bed, gene_id_names, primary_id, chrom_sizes)
-
+   
     genes[['chr', 'start', 'end', 'name', 'score', 'strand']].to_csv(os.path.join(outdir, "GeneList.bed"),
                                                                     sep='\t', index=False, header=False)
 
@@ -81,15 +81,19 @@ def annotate_genes_with_features(genes,
     bounds_bed = os.path.join(outdir, "GeneList.bed")
     #tss1kb_file = file + '.TSS1kb.bed'
 
+    # Use bedtools slop to determine tss
+    # Prevents start, end coordinate from going past chromosome  
     #Make bed file with TSS +/- 500bp
-    tss1kb = genes.ix[:,['chr','start','end','name','score','strand']]
-    tss1kb['start'] = genes['tss'] - 500
-    tss1kb['end'] = genes['tss'] + 500
+    #tss1kb = genes.ix[:,['chr','start','end','name','score','strand']]
+    
+    #tss1kb['start'] = genes['tss'] - 500
+    #tss1kb['end'] = genes['tss'] + 500
     tss1kb_file = os.path.join(outdir, "GeneList.TSS1kb.bed")
-    tss1kb.to_csv(tss1kb_file, header=False, index=False, sep='\t')
+    #tss1kb.to_csv(tss1kb_file, header=False, index=False, sep='\t')
 
+    sort_command = "cat {bounds_bed} | perl -lane 'print $F[0].\"\t\".$F[1].\"\t\".$F[1]' | bedtools slop -g {genome_sizes} -b 500 > {tss1kb_file}_temp; cut -f4,5,6 {bounds_bed} > {bounds_bed}_temp ; paste -d\"\t\" {tss1kb_file}_temp {bounds_bed}_temp > {tss1kb_file} ; bedtools sort -faidx {genome_sizes} -i {tss1kb_file} > {tss1kb_file}_temp; mv {tss1kb_file}_temp {tss1kb_file}; rm {tss1kb_file}_temp {bounds_bed}_temp".format(**locals())
     #The TSS1kb file should be sorted
-    sort_command = "bedtools sort -faidx {genome_sizes} -i {tss1kb_file} > {tss1kb_file}.sorted; mv {tss1kb_file}.sorted {tss1kb_file}; rm {tss1kb_file}.sorted".format(**locals())
+    #sort_command = " bedtools sort -faidx {genome_sizes} -i {tss1kb_file} > {tss1kb_file}.sorted; mv {tss1kb_file}.sorted {tss1kb_file}; rm {tss1kb_file}.sorted".format(**locals())
     p = Popen(sort_command, stdout=PIPE, stderr=PIPE, shell=True)
     print("Sorting Genes.TSS1kb file. \n Running: " + sort_command + "\n")
     (stdoutdata, stderrdata) = p.communicate()
@@ -97,6 +101,7 @@ def annotate_genes_with_features(genes,
 
     #Count features over genes and promoters
     genes = count_features_for_bed(genes, bounds_bed, genome_sizes, features, outdir, "Genes", force=force, use_fast_count=use_fast_count)
+    tss1kb = pd.read_csv(tss1kb_file, sep="\t", header=None,  names=['chr', 'start', 'end', 'name', 'score', 'strand'])
     tsscounts = count_features_for_bed(tss1kb, tss1kb_file, genome_sizes, features, outdir, "Genes.TSS1kb", force=force, use_fast_count=use_fast_count)
     tsscounts = tsscounts.drop(['chr','start','end','score','strand'], axis=1)
 
@@ -283,6 +288,7 @@ def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verb
 
         try:
             data = pd.read_table(output, header=None).ix[:,3].values
+            
         except Exception as e:
             print("Fast count method failed to count: " + str(bamfile) + "\n")
             print(err)
@@ -308,7 +314,6 @@ def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verb
             completed = False
 
     # Check for successful finish -- BEDTools can run into memory problems
-    #import pdb; pdb.set_trace()
     err = str(stderrdata, 'utf-8')
     if ("terminated" not in err) and ("Error" not in err) and ("ERROR" not in err) and any(data):
         print("BEDTools completed successfully. \n")
