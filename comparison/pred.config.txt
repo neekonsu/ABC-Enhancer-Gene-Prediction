@@ -1,0 +1,7 @@
+pred.col	agg.func	fill.val
+ABC.Score	sum	0
+distance	mean	Inf
+hic_kr	max	0
+activity_base	sum	0
+
+
