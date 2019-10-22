@@ -86,5 +86,9 @@ write.table(merged, file.path(opt$outDir, "expt.pred.txt"), sep = "\t", quote = 
 # Make plots
 print("Making plots")
 merged <- prepForPlotting(merged)
-merged <- subset(merged, class %in% c("genic", "intergenic"))
+
+if ("class" %in% colnames(merged))
+  if ("genic" %in% merged$class) 
+    merged <- subset(merged, class != "promoter")
+
 makePlots(merged, opt$plotConfig, opt$experimentalPositiveColumn, opt$outDir)

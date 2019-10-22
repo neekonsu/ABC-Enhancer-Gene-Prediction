@@ -8,9 +8,12 @@ qcExpt <- function(expt, opt) {
   
   #check to make sure regulated column contains TRUE/FALSE
   reg.vals <- sort(unique(expt[, get(opt$experimentalPositiveColumn)]))
-  if (!(identical(reg.vals, c(FALSE, TRUE)) | identical(reg.vals, c(0, 1)))) {
-    print("Error: The experimental data column must contain exactly two distinct values: TRUE and FALSE")
+  if (!(all(reg.vals %in% c(FALSE, TRUE)) | all(reg.vals %in% c(0, 1)))) {
+    print("Error: The experimental data column must contain TRUE/FALSE")
     stop()
+  }
+  if (length(reg.vals) == 1) {
+    print("Note: all values are either positives or negatives. Plotting code will fail, but merged prediction/experimental table will be output.")
   }
 }
 
@@ -30,7 +33,13 @@ combineExptPred <- function(expt, pred, config, fill.missing=TRUE) {
   #Sometimes a perturbed element will overlap multiple model elements (eg in the case of a large deletion)
   #In these cases need to summarize, Eg sum ABC.Score across model elements overlapping the deletion
   #This requires a config file describing how each prediction column should be aggregated
-  agg.cols <- c("chr","start","end","class","TargetGene","CellType","Regulated","Significant","PctChange")
+  agg.cols <- c("chr","start","end","TargetGene","class","CellType","Regulated","Significant","PctChange")
+
+  if (!all(agg.cols %in% colnames(merged))) {
+      print(paste0("Ignoring the following columns that were missing from the file: ", setdiff(agg.cols, colnames(merged))))
+      agg.cols <- intersect(agg.cols, colnames(merged))
+  }
+
   merged <- collapseEnhancersOverlappingMultiplePredictions(merged, config, agg.cols)
   
   #Experimental data missing predictions
