@@ -6,6 +6,7 @@ import pickle
 import numpy as np
 import pandas as pd
 import re
+import seaborn as sns
 from subprocess import check_call
 import sys
 import pyranges as pr
@@ -13,6 +14,88 @@ import pyranges as pr
 # setting this to raise makes sure that any dangerous assignments to pandas
 # dataframe slices/subsets error rather than warn
 pandas.set_option('mode.chained_assignment', 'raise')
+
+# Generates QC Prediction Metrics: 
+def GrabQCMetrics(prediction_df, outdir ):
+    GeneCounts = prediction_df.groupby(['TargetGene']).size()
+    GeneCounts.to_csv(os.path.join(outdir,"EnhancerPerGene.txt"), sep="\t")
+
+    GeneMean = prediction_df.groupby(['TargetGene']).size().mean()
+    GeneStdev = prediction_df.groupby(['TargetGene']).size().std()
+    # Grab Number of genes per enhancers
+    num_enhancers = prediction_df[['chr', 'start', 'end']].groupby(['chr', 'start', 'end']).size()
+    num_enhancers.to_csv(os.path.join(outdir,"GenesPerEnhancer.txt"), sep="\t")
+    mean_genes_per_enhancer = prediction_df[['chr', 'start', 'end']].groupby(['chr', 'start', 'end']).size().mean()
+    stdev_genes_per_enhancer = prediction_df[['chr', 'start', 'end']].groupby(['chr', 'start', 'end']).size().std()
+
+    # Grab Number of Enhancer-Gene Pairs Per Chromsome
+    enhancergeneperchrom = prediction_df.groupby(['chr']).size()
+    enhancergeneprechrom.to_csv(os.path.join(outdir, "EnhancerGenePairsPerChrom.txt"), sep="\t")
+
+    # Enhancer-Gene Distancee
+    prediction_df['dist'] = prediction_df['end'] - prediction_df['start']
+    distance = list(prediction_df['dist'])
+    # Plot Distributions and save as png
+    PlotDistribution(num_enhancers, "NumberOfGenesPerEnhancer", outdir)
+    PlotDistribution(GeneCounts, "NumberOfEnhancersPerGene", outdir)
+    PlotDistribution(enhancergeneperchrom, "EnhancersPerChromosome", outdir)
+    PlotDistribution(distance, "EnhancerGeneDistance", outdir)
+
+    with open("QCSummary.txt", "w") as f:
+        f.write("Average Number of Enhancers per Gene: ")
+        f.write(str(GeneMean))
+        f.write("\n")
+        f.write("Standard Deviation of Enhancers per Gene:")
+        f.write(str(GeneStdev))
+        f.write("\n")
+        f.write("Average Number of Genes linked to an Enhancer:")
+        f.write(str(mean_genes_per_enhancer))
+        f.write("\n")
+        f.write("Standard Deviation of Genes linked to an Enhancer:")
+        f.write(str(stdev_genes_per_enhancer))
+        f.write("\n")
+        f.write("Mean Enhancer-Gene Distance:")
+        f.write(str(prediction_df['dist'].mean()))
+        f.write("\n")
+        f.write("Standard Deviation of Enhancer-Gene Distance:")
+        f.write(str(prediction_df['dist'].std()))
+        f.write("\n")
+        f.close()
+
+# Generates peak file metrics 
+def PeakFileQC(peakfile, outdir):
+    if peakfile.endswith(".gz"):
+        peaks = pd.read_csv(peakfile, compression="gzip", sep="\t", header=None)
+    else:
+        peaks = pd.read_csv(peakfile, sep="\t", header=None)
+    peaks['dist'] = peaks[2]-peaks[1]
+    peaks_array = list(peaks['dist'])
+    PlotDistribution(peaks_array, "WidthOfPeaks", outdir)
+
+    with open(os.path.join(outdir, "PeakFileQCSummary.txt"),"w") as f:
+        f.write(str(peakfile))
+        f.write("\n")
+        f.write("Number of peaks: ")
+        f.write(str(len(peaks['dist'])))
+        f.write("\n")
+        f.write("Max width of peak: ")
+        f.write(str(max(peaks['dist'])))
+        f.write("\n")
+        f.write("Mean and Stdev width of peaks: ")
+        f.write(str(peaks['dist'].mean()))
+        f.write("\t")
+        f.write(str(peaks['dist'].std()))
+        f.write("\n")
+        f.close()
+# Plots and saves a distribution as *.png
+def PlotDistribution(array, title, outdir):
+    ax = sns.distplot(array)
+    ax.set_title(title)
+    ax.set_ylabel('Estimated PDF of distribution')
+    ax.set_xlabel('Counts')
+    fig = ax.get_figure()
+    outfile = os.path.join(outdir, str(title)+".png")
+    fig.savefig(outfile)
 
 def run_command(command, **args):
     print("Running command: " + command)

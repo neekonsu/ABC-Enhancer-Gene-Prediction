@@ -113,8 +113,10 @@ def main():
     if args.run_all_genes:
         all_positive = all_putative.iloc[np.logical_and.reduce((all_putative[args.score_column] > args.threshold, ~(all_putative['class'] == "promoter"))),:]
     else:
+    
         all_positive = all_putative.iloc[np.logical_and.reduce((all_putative.TargetGeneIsExpressed, all_putative[args.score_column] > args.threshold, ~(all_putative['class'] == "promoter"))),:]
-
+    # Grab QC Metrics is a function that outputs a QCSummary.txt fle
+    GrabQCMetrics(all_positive, args.outdir)    
     all_positive.to_csv(pred_file_full, sep="\t", index=False, header=True, float_format="%.6f")
     all_positive[slim_cols].to_csv(pred_file_slim, sep="\t", index=False, header=True, float_format="%.6f")
 
