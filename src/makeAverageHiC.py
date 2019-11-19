@@ -6,6 +6,8 @@ import sys, os, os.path
 from tools import write_params
 import pyranges
 
+# To do
+# Final output matrix needs to be KR normed as well
 def parseargs():
     class formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter):
         pass
@@ -60,7 +62,10 @@ def main():
 
     all_hic = pd.concat(hic_list, axis=1, join='outer', copy=False)
     hic_list = None #Clear from memory
-    
+
+    # import pdb
+    # pdb.set_trace()
+
     #all_hic = pd.DataFrame().join(hic_list, how="outer", on=['bin1','bin2'])
     #all_hic = reduce(lambda x, y: pd.merge(x, y, on = ['bin1', 'bin2'], how = 'outer'), hic_list)
     all_hic.fillna(value=0, inplace=True)
@@ -72,13 +77,13 @@ def main():
     #all_hic['avg_hic'] = all_hic[cols_for_avg].mean(axis=1)
     #avg_hic = all_hic[cols_for_avg].mean(axis=1)
     avg_hic = all_hic.mean(axis=1)
-    num_good = len(cols_for_avg) - np.isnan(all_hic[cols_for_avg]).sum(axis=1)
+    num_good = len(cols_for_avg) - np.isnan(all_hic).sum(axis=1)
 
     #Check minimum number of cols
     all_hic.drop(cols_for_avg, inplace=True, axis=1)
     all_hic.reset_index(level=all_hic.index.names, inplace=True)
-    all_hic['avg_hic'] = avg_hic
-    all_hic.loc[num_good < args.min_cell_types_required, 'avg_hic'] = np.nan
+    all_hic['avg_hic'] = avg_hic.values
+    all_hic.loc[num_good.values < args.min_cell_types_required, 'avg_hic'] = np.nan
 
     #Setup final matrix
     all_hic['bin1'] = all_hic['bin1'] * args.resolution
@@ -86,7 +91,7 @@ def main():
     all_hic = all_hic.loc[np.logical_or(all_hic['avg_hic'] > 0, np.isnan(all_hic['avg_hic'])), ] # why do these 0's exist?
 
     os.makedirs(os.path.join(args.outDir, args.chromosome), exist_ok=True)
-    all_hic.to_csv(os.path.join(args.outDir, args.chromosome, args.chromosome + ".KRobserved.gz"), sep="\t", header=False, index=False, compression="gzip", na_rep=np.nan)
+    all_hic.to_csv(os.path.join(args.outDir, args.chromosome, args.chromosome + ".avg.gz"), sep="\t", header=False, index=False, compression="gzip", na_rep=np.nan)
 
 def scale_hic_with_powerlaw(hic, resolution, scale_ref, gamma_ref, scale, gamma):
 

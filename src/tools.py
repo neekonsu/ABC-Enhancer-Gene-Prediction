@@ -30,18 +30,18 @@ def GrabQCMetrics(prediction_df, outdir ):
 
     # Grab Number of Enhancer-Gene Pairs Per Chromsome
     enhancergeneperchrom = prediction_df.groupby(['chr']).size()
-    enhancergeneprechrom.to_csv(os.path.join(outdir, "EnhancerGenePairsPerChrom.txt"), sep="\t")
+    enhancergeneperchrom.to_csv(os.path.join(outdir, "EnhancerGenePairsPerChrom.txt"), sep="\t")
 
     # Enhancer-Gene Distancee
-    prediction_df['dist'] = prediction_df['end'] - prediction_df['start']
-    distance = list(prediction_df['dist'])
+    distance = prediction_df['end'] - prediction_df['start']
+    
     # Plot Distributions and save as png
     PlotDistribution(num_enhancers, "NumberOfGenesPerEnhancer", outdir)
     PlotDistribution(GeneCounts, "NumberOfEnhancersPerGene", outdir)
     PlotDistribution(enhancergeneperchrom, "EnhancersPerChromosome", outdir)
     PlotDistribution(distance, "EnhancerGeneDistance", outdir)
 
-    with open("QCSummary.txt", "w") as f:
+    with open(os.path.join(outdir, "QCSummary.txt"), "w") as f:
         f.write("Average Number of Enhancers per Gene: ")
         f.write(str(GeneMean))
         f.write("\n")
@@ -55,10 +55,10 @@ def GrabQCMetrics(prediction_df, outdir ):
         f.write(str(stdev_genes_per_enhancer))
         f.write("\n")
         f.write("Mean Enhancer-Gene Distance:")
-        f.write(str(prediction_df['dist'].mean()))
+        f.write(str(distance.mean()))
         f.write("\n")
         f.write("Standard Deviation of Enhancer-Gene Distance:")
-        f.write(str(prediction_df['dist'].std()))
+        f.write(str(distance.std()))
         f.write("\n")
         f.close()
 
@@ -94,8 +94,8 @@ def PlotDistribution(array, title, outdir):
     ax.set_ylabel('Estimated PDF of distribution')
     ax.set_xlabel('Counts')
     fig = ax.get_figure()
-    outfile = os.path.join(outdir, str(title)+".png")
-    fig.savefig(outfile)
+    outfile = os.path.join(outdir, str(title)+".pdf")
+    fig.savefig(outfile, format='pdf')
 
 def run_command(command, **args):
     print("Running command: " + command)

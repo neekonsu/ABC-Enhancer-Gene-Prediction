@@ -1,0 +1,6 @@
+Average Number of Enhancers per Gene: 3.1598328025477707
+Standard Deviation of Enhancers per Gene:1.9169402573228895
+Average Number of Genes linked to an Enhancer:1.9108088589311507
+Standard Deviation of Genes linked to an Enhancer:1.7639827643245112
+Mean Enhancer-Gene Distance:708.9491653543307
+Standard Deviation of Enhancer-Gene Distance:337.5603327318702
