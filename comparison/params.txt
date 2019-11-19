@@ -1,0 +1,9 @@
+predictions	/mnt/lab_data2/kmualim/modified_ABC/results/sept_16/VersionControlTest_oldscripts/Predictions_VControl_STAMCAN_AVG/EnhancerPredictionsAllPutative.txt.gz
+experimentalData	data/ExperimentalData.Gasperini.FulcoNasser.191021.txt
+experimentalPositiveColumn	Regulated
+plotConfig	plot.config.txt
+predConfig	pred.config.txt
+ignoreExptMissingPredictions	FALSE
+outDir	.
+codeDir	.
+help	FALSE
