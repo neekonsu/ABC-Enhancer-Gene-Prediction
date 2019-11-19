@@ -33,13 +33,13 @@ def GrabQCMetrics(prediction_df, outdir ):
     enhancergeneperchrom.to_csv(os.path.join(outdir, "EnhancerGenePairsPerChrom.txt"), sep="\t")
 
     # Enhancer-Gene Distancee
-    distance = prediction_df['end'] - prediction_df['start']
-    
+    midpoint = prediction_df['start'] + (prediction_df['end'] - prediction_df['start'])*0.5
+    enhancer_gene_distance = np.absolute(prediction_df['TargetGeneTSS'] - midpoint)
     # Plot Distributions and save as png
     PlotDistribution(num_enhancers, "NumberOfGenesPerEnhancer", outdir)
     PlotDistribution(GeneCounts, "NumberOfEnhancersPerGene", outdir)
     PlotDistribution(enhancergeneperchrom, "EnhancersPerChromosome", outdir)
-    PlotDistribution(distance, "EnhancerGeneDistance", outdir)
+    PlotDistribution(enhancer_gene_distance, "EnhancerGeneDistance", outdir)
 
     with open(os.path.join(outdir, "QCSummary.txt"), "w") as f:
         f.write("Average Number of Enhancers per Gene: ")
