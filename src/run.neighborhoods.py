@@ -40,6 +40,7 @@ def parseargs(required_args=True):
     parser.add_argument('--enhancer_class_override', default=None, help="Annotation file to override enhancer class assignment")
     parser.add_argument('--supplementary_features', default=None, help="Additional features to count over regions")
     parser.add_argument('--cellType', default=None, help="Name of cell type")
+
     # replace textio wrapper returned by argparse with actual filename
     args = parser.parse_args()
     for name, val in vars(args).items():
@@ -65,7 +66,7 @@ def processCellType(args):
                                                 class_gene_file = args.genes_for_class_assignment)
 
     annotate_genes_with_features(genes = genes, 
-				    peak_file = args.peak_file,
+                                    peak_file = args.peak_file,
                                     genome_sizes = args.chrom_sizes, 
                                     use_fast_count = (not args.use_secondary_counting_method),
                                     default_accessibility_feature = params['default_accessibility_feature'],

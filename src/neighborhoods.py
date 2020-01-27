@@ -5,7 +5,6 @@ import os
 import os.path
 from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledProcessError
 from tools import *
-from pyBigWig import open as open_bigwig
 import linecache
 import traceback
 import time
@@ -70,7 +69,7 @@ def load_genes(file,
 
     return genes, genes_for_class_assignment
 
-# peak file used to determine expression
+
 def annotate_genes_with_features(genes, 
            peak_file,
            genome_sizes,
@@ -82,29 +81,10 @@ def annotate_genes_with_features(genes,
            default_accessibility_feature = "",
            **kwargs):
 
-    #file = genome['genes']
-    #genome_sizes = genome['sizes']
+    #Setup files for counting
     bounds_bed = os.path.join(outdir, "GeneList.bed")
-    #tss1kb_file = file + '.TSS1kb.bed'
-    
-    #Make bed file with TSS +/- 500bp
-    #tss1kb = genes.ix[:,['chr','start','end','name','score','strand']]
-    tss1kb = genes.loc[:,['chr','start','end','name','score','strand']]
-    tss1kb['start'] = genes['tss'] - 500
-    tss1kb['end'] = genes['tss'] + 500
+    tss1kb = make_tss_region_file(genes, outdir, genome_sizes)
     tss1kb_file = os.path.join(outdir, "GeneList.TSS1kb.bed")
-    # remove genes with tss that are too close to the edge 
-    tss1kb_1 = tss1kb[tss1kb['start'] > 0]
-    tss1kb_2 = tss1kb_1[tss1kb_1['end']>0]
-    tss1kb_2.to_csv(tss1kb_file, header=False, index=False, sep='\t')
-
-    #The TSS1kb file should be sorted
-    sort_command = "bedtools sort -faidx {genome_sizes} -i {tss1kb_file} > {tss1kb_file}.sorted ; mv {tss1kb_file}.sorted {tss1kb_file}".format(**locals())
-    p = Popen(sort_command, stdout=PIPE, stderr=PIPE, shell=True)
-    print("Sorting Genes.TSS1kb file. \n Running: " + sort_command + "\n")
-    (stdoutdata, stderrdata) = p.communicate()
-    err = str(stderrdata, 'utf-8')
-
 
     # Gets overlap of H3K27ac with Gene TSS file to determine Expression
     H3K27ac_peak_file=peak_file
@@ -139,6 +119,30 @@ def annotate_genes_with_features(genes,
 
     return merged
 
+def make_tss_region_file(genes, outdir, sizes, tss_slop=500):
+    #Given a gene file, define 1kb regions around the tss of each gene
+
+    sizes_pr = df_to_pyranges(read_bed(sizes + '.bed'))
+    tss1kb = genes.loc[:,['chr','start','end','name','score','strand']]
+    tss1kb['start'] = genes['tss']
+    tss1kb['end'] = genes['tss']
+    tss1kb = df_to_pyranges(tss1kb).slack(tss_slop)
+    tss1kb = pr.gf.genome_bounds(tss1kb, sizes_pr).df[['Chromosome','Start','End','name','score','strand']]
+    tss1kb.columns = ['chr','start','end','name','score','strand']
+    tss1kb_file = os.path.join(outdir, "GeneList.TSS1kb.bed")
+    tss1kb.to_csv(tss1kb_file, header=False, index=False, sep='\t')
+
+    #The TSS1kb file should be sorted
+    sort_command = "bedtools sort -faidx {sizes} -i {tss1kb_file} > {tss1kb_file}.sorted; mv {tss1kb_file}.sorted {tss1kb_file}".format(**locals())
+    run_command(sort_command)
+
+    # p = Popen(sort_command, stdout=PIPE, stderr=PIPE, shell=True)
+    # print("Sorting Genes.TSS1kb file. \n Running: " + sort_command + "\n")
+    # (stdoutdata, stderrdata) = p.communicate()
+    # err = str(stderrdata, 'utf-8')
+
+    return(tss1kb)
+
 def process_gene_bed(bed, name_cols, main_name, chrom_sizes=None, fail_on_nonunique=True):
 
     try:
@@ -151,10 +155,10 @@ def process_gene_bed(bed, name_cols, main_name, chrom_sizes=None, fail_on_nonuni
     names = bed.name.str.split(";", expand=True)
     assert(len(names.columns) == len(name_cols.split(",")))
     names.columns = name_cols.split(",")
-    bed = pandas.concat([bed, names], axis=1)
+    bed = pd.concat([bed, names], axis=1)
 
     bed['name'] = bed[main_name]
-    bed = bed.sort_values(by=['chr','start'])
+    #bed = bed.sort_values(by=['chr','start']) #JN Keep original sort order
 
     bed['tss'] = get_tss_for_bed(bed)
 
@@ -163,6 +167,7 @@ def process_gene_bed(bed, name_cols, main_name, chrom_sizes=None, fail_on_nonuni
     #Remove genes that are not defined in chromosomes file
     if chrom_sizes is not None:
         sizes = read_bed(chrom_sizes)
+        bed['chr'] = bed['chr'].astype('str') #JN needed in case chromosomes are all integer
         bed = bed[bed['chr'].isin(set(sizes['chr'].values))]
 
     #Enforce that gene names should be unique
@@ -200,13 +205,9 @@ def load_enhancers(outdir=".",
                    class_override_file = None):
 
     enhancers = read_bed(candidate_peaks)
-    # Peak File QC Metrics 
-    #metrics_dir = outdir+"/metrics/"
-    #if not os.path.exists(outdir+"/metrics"):
-   # 	os.makedirs(outdir+"/metrics/")
-    PeakFileQC(candidate_peaks, outdir)
-    enhancers = enhancers.loc[~(enhancers.chr.str.contains(re.compile('random|chrM|_|hap|Un'), na=True))]
-    #enhancers.to_csv("DHS.Stam.filtered.hg19.bed", sep="\t", index=False, header=False)
+    enhancers['chr'] = enhancers['chr'].astype('str')
+
+
     enhancers = count_features_for_bed(enhancers, candidate_peaks, genome_sizes, features, outdir, "Enhancers", skip_rpkm_quantile, force, use_fast_count)
 
     #cellType
@@ -224,16 +225,8 @@ def load_enhancers(outdir=".",
 
     enhancers.to_csv(os.path.join(outdir, "EnhancerList.txt"),
                 sep='\t', index=False, header=True, float_format="%.6f")
-   
-    # Grab Number of Enhancers Per Chrom
-    enhancersperchrom = enhancers.groupby(['chr']).size()
-    enhancersperchrom.to_csv(os.path.join(outdir, "EnhancersPerChrom.txt"), sep="\t")
-    PlotDistribution(enhancersperchrom, "EnhancersPerChromosome", outdir)
-
     enhancers[['chr', 'start', 'end', 'name']].to_csv(os.path.join(outdir, "EnhancerList.bed"),
                 sep='\t', index=False, header=False)
-    
-
 
 #Kristy's version
 def assign_enhancer_classes(enhancers, genes, tss_slop=500):
@@ -380,6 +373,7 @@ def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verb
             completed = False
 
     # Check for successful finish -- BEDTools can run into memory problems
+    #import pdb; pdb.set_trace()
     err = str(stderrdata, 'utf-8')
     if ("terminated" not in err) and ("Error" not in err) and ("ERROR" not in err) and any(data):
         print("BEDTools completed successfully. \n")
@@ -390,7 +384,7 @@ def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verb
         completed = False
 
 def count_tagalign(tagalign, bed_file, output, genome_sizes):
-    command1 = "zcat {tagalign} | cut -f1-3".format(**locals())
+    command1 = "tabix -B {tagalign} {bed_file} | cut -f1-3".format(**locals())
     command2 = "bedtools coverage -counts -b stdin -a {bed_file} | awk '{{print $1 \"\\t\" $2 \"\\t\" $3 \"\\t\" $NF}}' ".format(**locals())
     p1 = Popen(command1, stdout=PIPE, shell=True)
     with open(output, "wb") as outfp:
@@ -400,7 +394,7 @@ def count_tagalign(tagalign, bed_file, output, genome_sizes):
         print(p2.stderr)
 
 def count_bigwig(target, bed_file, output):
-    #from pyBigWig import open as open_bigwig    
+    from pyBigWig import open as open_bigwig    
     bw = open_bigwig(target)
     bed = read_bed(bed_file)
     with open(output, "wb") as outfp:
@@ -408,11 +402,11 @@ def count_bigwig(target, bed_file, output):
             # if isinstance(name, np.float):
             #     name = ""
             try:
-                val = bw.stats(chr, int(start), int(max(end, start + 1)), "max")[0] or 0
+                val = bw.stats(chr, int(start), int(max(end, start + 1)), "mean")[0] or 0
             except RuntimeError:
                 print("Failed on", chr, start, end)
                 raise
-#            val *= abs(end - start)  # convert to total coverage
+            val *= abs(end - start)  # convert to total coverage
             output = ("\t".join([chr, str(start), str(end), str(val)]) + "\n").encode('ascii')
             outfp.write(output)
 
@@ -421,7 +415,7 @@ def isBigWigFile(filename):
     return(filename.endswith(".bw") or filename.endswith(".bigWig") or filename.endswith(".bigwig"))
 
 def count_features_for_bed(df, bed_file, genome_sizes, features, directory, filebase, skip_rpkm_quantile=False, force=False, use_fast_count=True):
-    #import pdb; pdb.set_trace()
+
     for feature, feature_bam_list in features.items():
         start_time = time.time()
         if isinstance(feature_bam_list, str): 
@@ -439,7 +433,8 @@ def count_features_for_bed(df, bed_file, genome_sizes, features, directory, file
 def count_single_feature_for_bed(df, bed_file, genome_sizes, feature_bam, feature, directory, filebase, skip_rpkm_quantile, force, use_fast_count):
     orig_shape = df.shape[0]
     feature_name = feature + "." + os.path.basename(feature_bam)
-    feature_outfile = os.path.join(directory, "{}.{}.bed".format(filebase, feature_name))
+    feature_outfile = os.path.join(directory, "{}.{}.CountReads.bedgraph".format(filebase, feature_name))
+
     if force or (not os.path.exists(feature_outfile)) or (os.path.getsize(feature_outfile) == 0):
         print("Regenerating", feature_outfile)
         print("Counting coverage for {}".format(filebase + "." + feature_name))
@@ -455,9 +450,11 @@ def count_single_feature_for_bed(df, bed_file, genome_sizes, feature_bam, featur
     domain_counts = domain_counts[['chr', 'start', 'end', score_column]]
     featurecount = feature_name + ".readCount"
     domain_counts.rename(columns={score_column: featurecount}, inplace=True)
+    domain_counts['chr'] = domain_counts['chr'].astype('str')
 
     df = df.merge(domain_counts.drop_duplicates())
     #df = smart_merge(df, domain_counts.drop_duplicates())
+
     assert df.shape[0] == orig_shape, "Dimension mismatch"
 
     df[feature_name + ".RPM"] = 1e6 * df[featurecount] / float(total_counts)
@@ -486,16 +483,17 @@ def average_features(df, feature, feature_bam_list, skip_rpkm_quantile):
 # From /seq/lincRNA/Jesse/bin/scripts/JuicerUtilities.R
 #
 bed_extra_colnames = ["name", "score", "strand", "thickStart", "thickEnd", "itemRgb", "blockCount", "blockSizes", "blockStarts"]
-chromosomes = ['chr' + str(entry) for entry in list(range(1,23)) + ['M','X','Y']]   # should pass this in as an input file to specify chromosome order
-def read_bed(filename, extra_colnames=bed_extra_colnames, chr=None, sort=False, skip_chr_sorting=False):
-    #skip = 1 if ("track" in open(filename, "r").readline()) else 0
-    skip = 0
+#JN: 9/13/19: Don't assume chromosomes start with 'chr'
+#chromosomes = ['chr' + str(entry) for entry in list(range(1,23)) + ['M','X','Y']]   # should pass this in as an input file to specify chromosome order
+def read_bed(filename, extra_colnames=bed_extra_colnames, chr=None, sort=False, skip_chr_sorting=True):
+    skip = 1 if ("track" in open(filename, "r").readline()) else 0
     names = ["chr", "start", "end"] + extra_colnames
-    result = pd.read_table(filename, sep="\t", names=names, header=None, skiprows=skip, comment='#')
+    result = pd.read_table(filename, names=names, header=None, skiprows=skip, comment='#')
     result = result.dropna(axis=1, how='all')  # drop empty columns
     assert result.columns[0] == "chr"
 
-    result['chr'] = pd.Categorical(result['chr'], chromosomes, ordered=True)
+    #result['chr'] = pd.Categorical(result['chr'], chromosomes, ordered=True)
+    result['chr'] = pd.Categorical(result['chr'], ordered=True)
     if chr is not None:
         result = result[result.chr == chr]
     if not skip_chr_sorting:
@@ -510,11 +508,12 @@ def read_bedgraph(filename):
 
 def count_bam_mapped(bam_file):
     # Counts number of reads in a BAM file WITHOUT iterating.  Requires that the BAM is indexed
-    chromosomes = ['chr' + str(x) for x in range(1,23)] + ['chrX'] + ['chrY']
+    # chromosomes = ['chr' + str(x) for x in range(1,23)] + ['chrX'] + ['chrY']
     command = ("samtools idxstats " + bam_file)
     data = check_output(command, shell=True)
     lines = data.decode("ascii").split("\n")
-    vals = list(int(l.split("\t")[2]) for l in lines[:-1] if l.split("\t")[0] in chromosomes)
+    #vals = list(int(l.split("\t")[2]) for l in lines[:-1] if l.split("\t")[0] in chromosomes)
+    vals = list(int(l.split("\t")[2]) for l in lines[:-1])
     if not sum(vals) > 0:
         raise ValueError("Error counting BAM file: count <= 0")
     return sum(vals)
@@ -526,6 +525,7 @@ def count_tagalign_total(tagalign):
     return result
 
 def count_bigwig_total(bw_file):
+    from pyBigWig import open as open_bigwig
     bw = open_bigwig(bw_file)
     result = sum(l * bw.stats(ch, 0, l, "mean")[0] for ch, l in bw.chroms().items())
     assert (abs(result) > 0)  ## BigWig could have negative values, e.g. the negative-strand GroCAP bigwigs
@@ -598,7 +598,7 @@ def compute_activity(df, access_col):
 
     return df
 
-def run_qnorm(df, qnorm, qnorm_method = "quantile", separate_promoters = True):
+def run_qnorm(df, qnorm, qnorm_method = "rank", separate_promoters = True):
     # Quantile normalize epigenetic data to a reference
     #
     # Option to qnorm promoters and nonpromoters separately
@@ -618,7 +618,7 @@ def run_qnorm(df, qnorm, qnorm_method = "quantile", separate_promoters = True):
                 qnorm['ATAC.RPM'] = qnorm['DHS.RPM']
 
             if not separate_promoters:
-                qnorm = qnorm.loc[qnorm['class' == "any"]]
+                qnorm = qnorm.loc[qnorm['enh_class' == "any"]]
                 if qnorm_method == "rank":
                     interpfunc = interpolate.interp1d(qnorm['rank'], qnorm[col], kind='linear', fill_value='extrapolate')
                     df[col_dict[col]] = interpfunc((1 - df[col + ".quantile"]) * nRegions).clip(0)
