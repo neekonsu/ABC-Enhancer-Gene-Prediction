@@ -45,6 +45,9 @@ def GrabQCMetrics(prediction_df, outdir):
     thquantile = np.percentile(distance, 10)
     testthquantile = np.percentile(distance, 90)
 
+    # Quantile Normalization Plots
+    
+
     # Plot Distributions and save as png
     PlotDistribution(num_enhancers, "NumberOfGenesPerEnhancer", outdir)
     PlotDistribution(GeneCounts, "NumberOfEnhancersPerGene", outdir)
@@ -86,6 +89,28 @@ def GrabQCMetrics(prediction_df, outdir):
         f.write("E-G 90th quantile:")
         f.write(str(testthquantile))
         f.close()
+
+def PlotQuantilePlot(EnhancerList, title, outdir):
+    i='DHS'
+    ax = sns.scatterplot('DHS.RPM', 'DHS.RPM.quantile', data=EnhancerList)
+    ax.set_title(title)
+    ax.set_ylabel('RPM.quantile')
+    ax.set_xlabel('RPM')
+    fig = ax.get_figure()
+    outfile = os.path.join(outdir, i+str(title)+".pdf")
+    fig.savefig(outfile, format='pdf')
+    
+    i="H3K27ac"
+    ax = sns.scatterplot('H3K27ac.RPM', 'H3K27ac.RPM.quantile', data=EnhancerList)
+    ax.set_title(title)
+    ax.set_ylabel('RPM.quantile')
+    ax.set_xlabel('RPM')
+    fig = ax.get_figure()
+    outfile = os.path.join(outdir, i+str(title)+".pdf")
+    fig.savefig(outfile, format='pdf')
+
+
+    
 
 def NeighborhoodFileQC(neighborhood_dir, outdir):
     x = glob.glob(os.path.join(neighborhood_dir, "Enhancers.DHS.*"))
