@@ -1,5 +1,4 @@
-#####################
-# Joseph Nasser
+####################Joseph Nasser
 # October 16 2019
 #
 # Evaluate predictive model against experimental data
@@ -10,7 +9,7 @@
 #         - GenomicRanges (1.28.6)
 #         - ROCR (1.0-7)
 #         - ggplot2 (3.0.0)
-#         - caTools (1.17.1)
+#         - caTools (1.17.1
 #
 # Usage:
 #       Rscript comparePredictionsToExperiment.R --predictions pred.txt --experimentalData expt.txt --plotConfig plot.config.txt --predConfig pred.config.txt
@@ -77,6 +76,7 @@ qcExpt(expt, opt)
 
 # Merge experimental data and predictions
 print("Merging experiment and predictions")
+print(opt$ignoreExptMissingPredictions)
 merged <- combineExptPred(expt = expt, 
                           pred = pred,
                           config = opt$predConfig,

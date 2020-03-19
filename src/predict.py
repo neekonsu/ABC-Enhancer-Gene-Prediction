@@ -1,6 +1,7 @@
 import argparse
 from predictor import *
 from tools import *
+from metrics import *
 import pandas as pd
 import numpy as np
 import sys, traceback, os, os.path
@@ -25,7 +26,7 @@ def get_model_argument_parser():
 
     #hic
     #To do: validate params
-    parser.add_argument('--HiCdir', help="HiC directory")
+    parser.add_argument('--HiCdir', default=None, help="HiC directory")
     parser.add_argument('--hic_resolution', type=int, help="HiC resolution")
     parser.add_argument('--tss_hic_contribution', type=float, default=100, help="Weighting of diagonal bin of hic matrix as a percentage of the maximum of its neighboring bins")
     parser.add_argument('--hic_pseudocount_distance', type=int, default=1e6, help="A pseudocount is added equal to the powerlaw fit at this distance")
@@ -34,8 +35,8 @@ def get_model_argument_parser():
 
     #Power law
     parser.add_argument('--scale_hic_using_powerlaw', action="store_true", help="Scale Hi-C values using powerlaw relationship")
-    parser.add_argument('--hic_gamma', type=float, default=1, help="powerlaw exponent of hic data. Must be positive")
-    parser.add_argument('--hic_gamma_reference', type=float, default=1, help="powerlaw exponent to scale to. Must be positive")
+    parser.add_argument('--hic_gamma', type=float, default=.87, help="powerlaw exponent of hic data. Must be positive")
+    parser.add_argument('--hic_gamma_reference', type=float, default=.87, help="powerlaw exponent to scale to. Must be positive")
 
     #Genes to run through model
     parser.add_argument('--run_all_genes', action='store_true', help="Do not check for gene expression, make predictions for all genes")
@@ -48,6 +49,7 @@ def get_model_argument_parser():
 
     #Other
     parser.add_argument('--tss_slop', type=int, default=500, help="Distance from tss to search for self-promoters")
+    parser.add_argument('--chromosomes', default="all", help="chromosomes to make predictions for. Defaults to intersection of all chromosomes in --genes and --enhancers")
     parser.add_argument('--include_chrY', '-y', action='store_true', help="Make predictions on Y chromosome")
 
     return parser
@@ -89,10 +91,15 @@ def main():
     all_putative_list = []
 
     #Make predictions
-    chromosomes = set(genes['chr']).intersection(set(enhancers['chr'])) 
-    if not args.include_chrY:
-        chromosomes.discard('chrY')
-        chromosomes.discard('chr9')
+    if args.chromosomes == "all":
+        chromosomes = set(genes['chr']).intersection(set(enhancers['chr'])) 
+        if not args.include_chrY:
+            chromosomes.discard('chrY')
+    else:
+        chromosomes = args.chromosomes.split(",")
+    #chromosomes = set(genes['chr']).intersection(set(enhancers['chr'])) 
+    #chromosomes = ['chr22']
+
     for chromosome in chromosomes:
         print('Making predictions for chromosome: {}'.format(chromosome))
         t = time.time()
@@ -113,13 +120,12 @@ def main():
     if args.run_all_genes:
         all_positive = all_putative.iloc[np.logical_and.reduce((all_putative[args.score_column] > args.threshold, ~(all_putative['class'] == "promoter"))),:]
     else:
-    
         all_positive = all_putative.iloc[np.logical_and.reduce((all_putative.TargetGeneIsExpressed, all_putative[args.score_column] > args.threshold, ~(all_putative['class'] == "promoter"))),:]
-    # Grab QC Metrics is a function that outputs a QCSummary.txt fle
-    GrabQCMetrics(all_positive, args.outdir)    
+
     all_positive.to_csv(pred_file_full, sep="\t", index=False, header=True, float_format="%.6f")
     all_positive[slim_cols].to_csv(pred_file_slim, sep="\t", index=False, header=True, float_format="%.6f")
 
+#    GrabQCMetrics(all_positive, args.outdir)
     make_gene_prediction_stats(all_putative, args)
     write_connections_bedpe_format(all_positive, pred_file_bedpe, args.score_column)
 
@@ -136,8 +142,11 @@ def main():
     print("Done.")
     
 def validate_args(args):
-    if args.hic_type == 'juicebox':
+    if args.HiCdir and args.hic_type == 'juicebox':
         assert args.hic_resolution is not None, 'HiC resolution must be provided if hic_type is juicebox'
+
+    if not args.HiCdir:
+        print("WARNING: Hi-C directory not provided. Model will only compute ABC score using powerlaw!")
 
 if __name__ == '__main__':
     main()

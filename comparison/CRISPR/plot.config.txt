@@ -1,0 +1,5 @@
+plot.name	pred.cols
+test1	ABC.Score,distance
+test2	activity_base
+
+

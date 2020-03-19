@@ -1,4 +1,0 @@
-/mnt/lab_data2/kmualim/modified_ABC/results/sept_16/Peaks_KCandidateRegions/ENCFF801RMG.merged.nodup.pooled.pval0.01.300K.bfilt.narrowPeak.candidateRegions.bed
-Number of peaks: 137216
-Max width of peak: 4188
-Mean and Stdev width of peaks: 622.8499883395523	254.60238967035858

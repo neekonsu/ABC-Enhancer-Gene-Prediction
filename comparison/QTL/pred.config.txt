@@ -1,0 +1,5 @@
+pred.col	agg.func	fill.val
+ABC_Score	sum	0
+hic_contact	max	0
+activity	sum	0
+

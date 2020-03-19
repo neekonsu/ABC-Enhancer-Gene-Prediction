@@ -5,6 +5,7 @@ import os
 import os.path
 from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledProcessError
 from tools import *
+from metrics  import *
 import linecache
 import traceback
 import time
@@ -71,7 +72,6 @@ def load_genes(file,
 
 
 def annotate_genes_with_features(genes, 
-           peak_file,
            genome_sizes,
            skip_gene_counts=False,
            features={},
@@ -85,24 +85,6 @@ def annotate_genes_with_features(genes,
     bounds_bed = os.path.join(outdir, "GeneList.bed")
     tss1kb = make_tss_region_file(genes, outdir, genome_sizes)
     tss1kb_file = os.path.join(outdir, "GeneList.TSS1kb.bed")
-
-    # Gets overlap of H3K27ac with Gene TSS file to determine Expression
-    H3K27ac_peak_file=peak_file
-    get_expressed_command = "bedtools intersect -a {tss1kb_file} -b {H3K27ac_peak_file} -u > {tss1kb_file}.test".format(**locals())
-    p = Popen(get_expressed_command, stdout=PIPE, stderr=PIPE, shell=True)
-    print("Running:" + get_expressed_command + "\n")
-    (stdoutdata, stderrdata) = p.communicate()
-    err = str(stderrdata, 'utf-8')
-
-    # Gene is expressed only IF H3K27ac peak overlaps TSS of gene
-    try:
-        filename="{tss1kb_file}.test".format(**locals())
-        expression = pd.read_csv(filename, sep="\t", header=None)
-    except:
-        exit()
-    expressed_genes = expression[3].drop_duplicates()
-    #print(expressed_genes[:5])
-    genes['Expression'] = genes['name'].isin(expressed_genes)
 
     #Count features over genes and promoters
     genes = count_features_for_bed(genes, bounds_bed, genome_sizes, features, outdir, "Genes", force=force, use_fast_count=use_fast_count)

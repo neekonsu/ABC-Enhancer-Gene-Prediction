@@ -1,6 +1,7 @@
 qcExpt <- function(expt, opt) {
   #Check for duplicate experiments
-  dupe <- any(duplicated(expt[, c("CellType","TargetGene","chr","start","end")] ))
+  #dupe <- any(duplicated(expt[, c("CellType","TargetGene","chr","start","end")] ))
+  dupe <- any(duplicated(expt[, c("TargetGene","chr","start","end")] ))
   if (dupe) {
     print("Error: The experimental data file contains duplicate experiments!")
     stop()
@@ -19,21 +20,24 @@ qcExpt <- function(expt, opt) {
 
 combineExptPred <- function(expt, pred, config, fill.missing=TRUE) {
   config <- fread(config)
-  pred.gr <- with(pred, GRanges(paste0(CellType,":",chr,":",TargetGene), IRanges(start, end)))
-  expt.gr <- with(expt, GRanges(paste0(CellType,":",chr,":",TargetGene), IRanges(start, end)))
+  pred.gr <- with(pred, GRanges(paste0(chr,":",TargetGene), IRanges(start, end)))
+  expt.gr <- with(expt, GRanges(paste0(chr,":",TargetGene), IRanges(start, end)))
+  #pred.gr <- with(pred, GRanges(paste0(CellType,":",chr,":",TargetGene), IRanges(start, end)))
+  #expt.gr <- with(expt, GRanges(paste0(CellType,":",chr,":",TargetGene), IRanges(start, end)))
   ovl <- GenomicRanges::findOverlaps(expt.gr, pred.gr)
   
   #Rename duplicated columns
   col.bool <- colnames(pred) %in% colnames(expt)
   colnames(pred)[col.bool] <- paste0(colnames(pred)[col.bool], ".from.predictions")
-  
+   
   #Merge predictions with experimental data
   merged <- cbind(expt[queryHits(ovl)], pred[subjectHits(ovl)])
   
   #Sometimes a perturbed element will overlap multiple model elements (eg in the case of a large deletion)
   #In these cases need to summarize, Eg sum ABC.Score across model elements overlapping the deletion
   #This requires a config file describing how each prediction column should be aggregated
-  agg.cols <- c("chr","start","end","TargetGene","class","CellType","Regulated","Significant","PctChange")
+  #agg.cols <- c("chr","start","end","TargetGene","class","CellType","Regulated","Significant","PctChange")
+  agg.cols <- c("chr","start","end","TargetGene","class","Regulated","Significant","PctChange")
 
   if (!all(agg.cols %in% colnames(merged))) {
       print(paste0("Ignoring the following columns that were missing from the file: ", setdiff(agg.cols, colnames(merged))))

@@ -1,0 +1,7 @@
+/mnt/lab_data2/kmualim/data/send_to_Kristy/FilesToReproduceABC/PeakAndNeighborhoodFiles/Peaks_tmp/ENCFF030DCL.macs2_peaks.narrowPeak
+Number of peaks:4113002
+Median width of peak:86.0	126.32217052167735	99.35026129537168
+Median Distance of Peak to Closest TSS:23718.5	55737.354294556986	104806.83729742421
+Number of Candidate Regions:136948
+Median width of Candidate Regions:86.0	126.32217052167735	99.35026129537168
+Counts in Enhancers/GenesTSS/Genes:	16726643	2486040	8637468
