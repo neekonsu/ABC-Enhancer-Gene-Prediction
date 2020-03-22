@@ -86,6 +86,8 @@ def processCellType(args):
                     class_override_file = args.enhancer_class_override,
                     outdir = args.outdir)
 
+    outfile = os.path.join(args.outdir, "EnhancerList.txt")
+    process_quantile(outfile, outdir=args.outdir)
     NeighborhoodFileQC(neighborhood_dir = args.outdir, outdir = args.outdir)
     print('Neighborhoods Complete! \n')
 

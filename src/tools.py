@@ -5,11 +5,41 @@ import re
 from subprocess import check_call
 import sys
 import pyranges as pr
+import matplotlib.pyplot as plt
 
 # setting this to raise makes sure that any dangerous assignments to pandas
 # dataframe slices/subsets error rather than warn
 pd.set_option('mode.chained_assignment', 'raise')
 
+def process_quantile(enhancer_list, outdir):
+    quantile = pd.read_csv(enhancer_list, sep="\t")
+    columns = list(quantile.columns)
+    col_to_use = [col for col in columns if "readCount" in col]
+    col_to_use.append("H3K27ac.RPM")
+    col_to_use.append("DHS.RPM")
+
+    dictionary = {}
+    for col in col_to_use:
+        dictionary[col] = quantile[col]
+    dataframe = pd.DataFrame.from_dict(dictionary)
+    ax = sns.scatterplot(x=dataframe[col_to_use[0]], y=dataframe[col_to_use[4]])
+    title = col_to_use[0]
+    ax.set_title(str(title))
+    ax.set_ylabel('Estimated PDF of distribution')
+    ax.set_xlabel(str(title))
+    fig = ax.get_figure()
+    outfile = os.path.join(outdir, str(title)+".png")
+    fig.savefig(outfile, format='png')
+    plt.clf()
+
+    ax = sns.scatterplot(x=dataframe[col_to_use[2]], y=dataframe[col_to_use[5]])
+    title = col_to_use[5]
+    ax.set_title(str(title))
+    ax.set_ylabel('Estimated PDF of distribution')
+    ax.set_xlabel(str(title))
+    fig = ax.get_figure()
+    outfile = os.path.join(outdir, str(title)+".png")
+    fig.savefig(outfile, format='png')
 
 def run_command(command, **args):
     print("Running command: " + command)
