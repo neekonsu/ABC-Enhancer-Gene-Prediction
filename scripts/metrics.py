@@ -1,14 +1,23 @@
 import os,sys
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import glob
+from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledProcessError
 
 def grab_nearest_tss_from_peak(macs_peaks, genome_tss, outdir):
     # Grab nearest tss from peak
-    outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".candidateRegions.bed")
+    outfile = os.path.join(outdir, os.path.basename(macs_peaks))
     files = pd.read_csv(outfile, sep="\t")
     annotated_peaks = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
-    command = "bedtools closest -a {outfile} -b {genome_tss} -d > {annotated_peaks}"
+    sort_command = "sort -k1,1 -k2,2n {genome_tss} > {genome_tss}.sorted"
+    sort_command = sort_command.format(**locals())
+    p = Popen(sort_command, stdout=PIPE, stderr=PIPE, shell=True)
+    print("Running:" + sort_command)
+    (stdoutdata, stderrdata) = p.communicate()
+    err = str(stderrdata, 'utf-8')
+
+    command = "bedtools closest -a {outfile} -b {genome_tss}.sorted -d > {annotated_peaks}"
     command = command.format(**locals())
     p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
     print("Running:" + command)
@@ -44,9 +53,6 @@ def GrabQCMetrics(prediction_df, outdir):
     distance = np.array(prediction_df['distance'])
     thquantile = np.percentile(distance, 10)
     testthquantile = np.percentile(distance, 90)
-
-    # Quantile Normalization Plots
-    
 
     # Plot Distributions and save as png
     PlotDistribution(num_enhancers, "NumberOfGenesPerEnhancer", outdir)
@@ -90,27 +96,6 @@ def GrabQCMetrics(prediction_df, outdir):
         f.write(str(testthquantile))
         f.close()
 
-def PlotQuantilePlot(EnhancerList, title, outdir):
-    i='DHS'
-    ax = sns.scatterplot('DHS.RPM', 'DHS.RPM.quantile', data=EnhancerList)
-    ax.set_title(title)
-    ax.set_ylabel('RPM.quantile')
-    ax.set_xlabel('RPM')
-    fig = ax.get_figure()
-    outfile = os.path.join(outdir, i+str(title)+".pdf")
-    fig.savefig(outfile, format='pdf')
-    
-    i="H3K27ac"
-    ax = sns.scatterplot('H3K27ac.RPM', 'H3K27ac.RPM.quantile', data=EnhancerList)
-    ax.set_title(title)
-    ax.set_ylabel('RPM.quantile')
-    ax.set_xlabel('RPM')
-    fig = ax.get_figure()
-    outfile = os.path.join(outdir, i+str(title)+".pdf")
-    fig.savefig(outfile, format='pdf')
-
-
-    
 
 def NeighborhoodFileQC(neighborhood_dir, outdir):
     x = glob.glob(os.path.join(neighborhood_dir, "Enhancers.DHS.*"))
@@ -191,10 +176,11 @@ def PeakFileQC(macs_peaks, outdir):
 
 # Plots and saves a distribution as *.png
 def PlotDistribution(array, title, outdir):
-    ax = sns.distplot(array)
+    ax = sns.distplot(array, hist=True)
     ax.set_title(title)
     ax.set_ylabel('Estimated PDF of distribution')
-    ax.set_xlabel('Counts')
+    ax.set_xlabel(str(title))
     fig = ax.get_figure()
     outfile = os.path.join(outdir, str(title)+".pdf")
     fig.savefig(outfile, format='pdf')
+    plt.clf()
