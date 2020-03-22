@@ -5,7 +5,7 @@ import glob
 
 def grab_nearest_tss_from_peak(macs_peaks, genome_tss, outdir):
     # Grab nearest tss from peak
-    outfile = os.path.join(outdir, os.path.basename(macs_peaks) + ".candidateRegions.bed")
+    outfile = os.path.join(outdir, os.path.basename(macs_peaks))
     files = pd.read_csv(outfile, sep="\t")
     annotated_peaks = os.path.join(outdir, os.path.basename(macs_peaks) + ".annotated_peaks.bed")
     command = "bedtools closest -a {outfile} -b {genome_tss} -d > {annotated_peaks}"
@@ -44,10 +44,7 @@ def GrabQCMetrics(prediction_df, outdir):
     distance = np.array(prediction_df['distance'])
     thquantile = np.percentile(distance, 10)
     testthquantile = np.percentile(distance, 90)
-
-    # Quantile Normalization Plots
     
-
     # Plot Distributions and save as png
     PlotDistribution(num_enhancers, "NumberOfGenesPerEnhancer", outdir)
     PlotDistribution(GeneCounts, "NumberOfEnhancersPerGene", outdir)
@@ -89,27 +86,6 @@ def GrabQCMetrics(prediction_df, outdir):
         f.write("E-G 90th quantile:")
         f.write(str(testthquantile))
         f.close()
-
-def PlotQuantilePlot(EnhancerList, title, outdir):
-    i='DHS'
-    ax = sns.scatterplot('DHS.RPM', 'DHS.RPM.quantile', data=EnhancerList)
-    ax.set_title(title)
-    ax.set_ylabel('RPM.quantile')
-    ax.set_xlabel('RPM')
-    fig = ax.get_figure()
-    outfile = os.path.join(outdir, i+str(title)+".pdf")
-    fig.savefig(outfile, format='pdf')
-    
-    i="H3K27ac"
-    ax = sns.scatterplot('H3K27ac.RPM', 'H3K27ac.RPM.quantile', data=EnhancerList)
-    ax.set_title(title)
-    ax.set_ylabel('RPM.quantile')
-    ax.set_xlabel('RPM')
-    fig = ax.get_figure()
-    outfile = os.path.join(outdir, i+str(title)+".pdf")
-    fig.savefig(outfile, format='pdf')
-
-
     
 
 def NeighborhoodFileQC(neighborhood_dir, outdir):
@@ -194,7 +170,8 @@ def PlotDistribution(array, title, outdir):
     ax = sns.distplot(array)
     ax.set_title(title)
     ax.set_ylabel('Estimated PDF of distribution')
-    ax.set_xlabel('Counts')
+    ax.set_xlabel(str(title))
     fig = ax.get_figure()
     outfile = os.path.join(outdir, str(title)+".pdf")
     fig.savefig(outfile, format='pdf')
+    plt.clf()
