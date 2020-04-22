@@ -1,0 +1,38 @@
+{
+
+  "ABCpipeline.dnaseqbam": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
+  "ABCpipeline.dnaseqbam_index": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
+  "ABCpipeline.h3k27ac_bam": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam",
+  "ABCpipeline.h3k27ac_bam_index": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam.bai",
+
+  "ABCpipeline.dhs_bam": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
+  "ABCpipeline.dhs_bam_index": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
+
+  "ABCpipeline.macs_type": "BAM",
+  "ABCpipeline.pval_cutoff": 0.1,
+  "ABCpipeline.nStrongestPeaks": 3000,
+  "ABCpipeline.peakExtendFromSummit": 250,
+  "ABCpipeline.regions_blacklist": "ABC-Enhancer-Gene-Prediction/reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed",
+  "ABCpipeline.regions_whitelist": "ABC-Enhancer-Gene-Prediction/example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS500bp.chr22.bed",
+  "ABCpipeline.genes_bed": "ABC-Enhancer-Gene-Prediction/example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed",
+
+
+  "ABCpipeline.ubiq_genes": "ABC-Enhancer-Gene-Prediction/reference/UbiquitouslyExpressedGenesHG19.txt",
+  "ABCpipeline.expression_table": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Expression/K562.ENCFF934YBO.TPM.txt",
+  "ABCpipeline.cellType": "K562",
+  
+  
+  "ABCpipeline.HiCdirTar": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/HiC/hic.tar.gz",  
+  "ABCpipeline.hic_gamma": 0.87,
+  "ABCpipeline.hic_gamma_reference": 0.87,
+  
+  "ABCpipeline.window": 5000000,
+  "ABCpipeline.threshold": 0.02,
+  "ABCpipeline.chrom_sizes": "ABC-Enhancer-Gene-Prediction/example_chr22/reference/chr22",
+  "ABCpipeline.scale_hic_using_powerlaw": true,
+
+
+  "ABCpipeline.docker_image": "quay.io/jnasser/abc-container",
+  "ABCpipeline.num_threads": 1,
+  "ABCpipeline.mem_size": "1 GB"
+}

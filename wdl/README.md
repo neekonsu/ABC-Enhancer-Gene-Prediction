@@ -1,0 +1,1 @@
+java -jar jars/cromwell-49.jar run ABC-Enhancer-Gene-Prediction/wdl/wdl/abc-pipeline.wdl --inputs ABC-Enhancer-Gene-Prediction/wdl/wdl/inputs.json --options ABC-Enhancer-Gene-Prediction/wdl/wdl/options.json
