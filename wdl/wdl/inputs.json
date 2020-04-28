@@ -1,6 +1,6 @@
 {
 
- 
+  "ABCpipeline.precomputedCandidateRegions" : "ABC-Enhancer-Gene-Prediction/example_chr22/ABC_output/Peaks/wgEncodeUwDnaseK562AlnRep1.chr22.macs2_peaks.narrowPeak.sorted.candidateRegions.bed",
 
   "ABCpipeline.dnaseqbam": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
   "ABCpipeline.dnaseqbam_index": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",

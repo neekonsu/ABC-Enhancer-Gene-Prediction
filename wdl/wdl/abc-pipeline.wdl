@@ -84,9 +84,13 @@ workflow ABCpipeline {
               disks = disks
       }
 
+      if (length(runMACS.narrowPeak) >= 1) {
+        File narrowPeak2 = runMACS.narrowPeak[0]
+      }
+
       call sortMACS {
           input:
-              narrowPeak = runMACS.narrowPeak,
+              narrowPeak = narrowPeak2,
               chrom_sizes = chrom_sizes,
               docker_image = docker_image,
               num_threads = num_threads,
@@ -94,9 +98,13 @@ workflow ABCpipeline {
               disks = disks
       }
 
+      if (length(sortMACS.narrowPeakSorted) >= 1) {
+        File narrowPeakSorted2 = sortMACS.narrowPeakSorted[0]
+      }
+
       call makeCandidateRegions {
          input:
-             narrowPeakSorted = sortMACS.narrowPeakSorted,
+             narrowPeakSorted = narrowPeakSorted2,
              bam = select_first([dnaseqbam]),
              bam_index = select_first([dnaseqbam_index]),
              chrom_sizes = chrom_sizes,
@@ -111,11 +119,15 @@ workflow ABCpipeline {
               mem_size = mem_size,
               disks = disks
       }
+
+      if (length(makeCandidateRegions.candidateRegions) >= 1) {
+        File candidateRegions2 = makeCandidateRegions.candidateRegions[0]
+      }
   }    
 
     call runNeighborhoods {
        input:
-           candidate_enhancer_regions = select_first([precomputedCandidateRegions, makeCandidateRegions.candidateRegions]),
+           candidate_enhancer_regions = select_first([precomputedCandidateRegions, candidateRegions2]),
            genes_bed = genes_bed,
            genes_for_class_assignment = genes_for_class_assignment,
            ubiquitously_expressed_genes = ubiq_genes,
@@ -170,7 +182,6 @@ workflow ABCpipeline {
               mem_size = mem_size,
               disks = disks
     }
-
 }
 
 
@@ -285,7 +296,6 @@ task makeCandidateRegions {
         disks: disks
     }
 }
-
 
 task runNeighborhoods {
        File candidate_enhancer_regions
