@@ -1,5 +1,7 @@
 {
 
+ 
+
   "ABCpipeline.dnaseqbam": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam",
   "ABCpipeline.dnaseqbam_index": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam.bai",
   "ABCpipeline.h3k27ac_bam": "ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam",

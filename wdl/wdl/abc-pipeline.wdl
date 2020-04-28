@@ -1,6 +1,8 @@
 # To Do:
 # 1. Support multiple DHS, K27ac files
 # 2. Support more input flags
+# 3. Python package versions in DockerFile?
+# 4. Add more output files
 
 workflow ABCpipeline {
   # If this is defined makeCandidateRegions is not run
@@ -169,28 +171,6 @@ workflow ABCpipeline {
               disks = disks
     }
 
-    output {
-       #Peaks
-       File? narrowPeak = runMACS.narrowPeak
-
-       #Sort Peaks
-       File? narrowPeakSorted = sortMACS.narrowPeakSorted
-
-       #Candidate Regions
-       File? candidateRegions = select_first([makeCandidateRegions.candidateRegions, precomputedCandidateRegions])
-       
-       #Neighborhoods
-       File enhancerList = runNeighborhoods.enhancerList
-       File geneList = runNeighborhoods.geneList
-       
-       #Predictions
-       File enhancerPredictions = makePrediction.enhancerPredictions
-       File enhancerPredictionsFull = makePrediction.enhancerPredictionsFull
-       File params = makePrediction.params
-       File bedpe = makePrediction.bedpe
-       File geneStats = makePrediction.geneStats
-       File? allPutative = makePrediction.allPutative
-    }
 }
 
 
@@ -223,7 +203,7 @@ task runMACS {
     output {
         # TODO: Add all the outputs
         # File candidateRegions = "Peaks/" + basename(bam, ".bam") + ".macs2_peaks.narrowPeak.candidateRegions.bed"
-        File? narrowPeak = "macs2_peaks.narrowPeak" 
+        Array[File] narrowPeak = glob("macs2_peaks.narrowPeak")
     }
     runtime {
         docker: docker_image
@@ -252,7 +232,7 @@ task sortMACS {
 
     output {
         # TODO: Add all the outputs
-        File? narrowPeakSorted = "macs2_peaks.narrowPeak.sorted"
+        Array[File] narrowPeakSorted = glob("macs2_peaks.narrowPeak.sorted")
     }
 
     runtime {
@@ -295,7 +275,7 @@ task makeCandidateRegions {
     }
 
     output {
-        File candidateRegions = "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"
+        Array[File] candidateRegions = glob("macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
     }
 
     runtime {
@@ -416,7 +396,7 @@ task makePrediction {
         File params = "parameters.predict.txt"
         File bedpe = "EnhancerPredictions.bedpe"
         File geneStats = "GenePredictionStats.txt"
-        File? allPutative = "EnhancerPredictionsAllPutative.txt.gz"
+        Array[File] allPutative = glob("EnhancerPredictionsAllPutative.txt.gz")
 
     }
     runtime {
