@@ -79,6 +79,7 @@ def process_genome_tss(args):
     # This loop is taking a while; figure out speed up! 
     # Take top 2 promoters based on counts 
     gene_tss_df = None
+
     for gene in tss1kb_file['TargetGene']: 
         tss1kb_file_subset = tss1kb_file.loc[tss1kb_file['TargetGene'].str.contains(gene)]
         sorted_tss1kb_file_subset = tss1kb_file_subset.sort_values(by=['H3K27ac.RPM'], ascending=False)
@@ -89,7 +90,7 @@ def process_genome_tss(args):
             gene_tss_df = top_two
         else:
             gene_tss_df = pd.concat([gene_tss_df, top_two])
-    
+        print(gene_tss_df)
     file_output = "H3K27ac."+os.path.basename(args.h3k27ac)+"_Expressed"
     gene_tss_df[['chr', 'start', 'end', 'TargetGeneTSS', 'score', 'strand']].to_csv("ENSEMBL_GeneTSS.txt", sep="\t", index=False, header=False)
     gene_tss_df[['chr', 'start_Gene', 'end_Gene', 'TargetGene', 'score', 'strand']].to_csv("ENSEMBL_Genes.txt", sep="\t", index=False, header=False)
