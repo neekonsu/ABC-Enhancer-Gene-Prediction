@@ -61,7 +61,7 @@ def assignFiltersToDataFrame(args):
         intersected = pd.concat([copy, intersected_df])
     # filter for filtered file + released files 
     # fill columns that are filled with NAN
-    df = intersected.fillna(0.0).iloc[:15, :]
+    df = intersected.fillna(0.0)[:15]
     
     # grab entries with biological replicates 
     # grab celltypes with biological replicates 
@@ -92,10 +92,10 @@ def downloadFiles(args, df):
     if not os.path.exists(args.data_outdir):
         os.mkdir(args.data_outdir)
    
-    if args.apply_pool:
+   if args.apply_pool:
         with Pool(int(args.threads)) as p:
             p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
-   
+  
     else:
         for link in list(download_links['download_links']):
             download_single_bam(link)
