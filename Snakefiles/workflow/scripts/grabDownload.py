@@ -29,7 +29,7 @@ def main():
     metadata = assignFiltersToDataFrame(args)
     if args.download_files:
         outfile = downloadFiles(args, metadata)
-    save_paired_single_end_files(args, metadata)
+     save_paired_single_end_files(args, metadata)
 
 
 def assignFiltersToDataFrame(args):
@@ -62,7 +62,7 @@ def assignFiltersToDataFrame(args):
     # filter for filtered file + released files 
     # fill columns that are filled with NAN
     df = intersected.fillna(0.0)[:15]
-    
+    save_paired_single_end_files(args, df)
     # grab entries with biological replicates 
     # grab celltypes with biological replicates 
     full_metadata, metadata_unique = obtainDuplicated(args, df)
@@ -89,16 +89,16 @@ def downloadFiles(args, df):
     outfile=os.path.join(args.outdir, "linkstodownload.txt")
     download_links[['download_links']].to_csv( outfile, sep="\t", index=False, header=None)
     
-    if not os.path.exists(args.data_outdir):
-        os.mkdir(args.data_outdir)
+#    if not os.path.exists(args.data_outdir):
+#        os.mkdir(args.data_outdir)
    
-   if args.apply_pool:
-        with Pool(int(args.threads)) as p:
-            p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
+#   if args.apply_pool:
+#        with Pool(int(args.threads)) as p:
+#            p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
   
-    else:
-        for link in list(download_links['download_links']):
-            download_single_bam(link)
+#    else:
+#        for link in list(download_links['download_links']):
+#            download_single_bam(link)
     return outfile 
 
 def save_paired_single_end_files(args, metadata):
