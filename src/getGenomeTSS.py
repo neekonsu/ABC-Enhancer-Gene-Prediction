@@ -7,7 +7,6 @@ import os
 from tools import write_params, run_command
 from neighborhoods import count_single_feature_for_bed 
 
-# TODO: Grab Gene Regions from ENSEMBL File : CdsStart CdsEnd to represent Gene Bodies for respective input into run.neighborhoods.py
 
 def parseargs(required_args=True):
     class formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter):
@@ -20,17 +19,28 @@ def parseargs(required_args=True):
     parser.add_argument('--tss_file', required=required_args, help="tss isoform file")
     parser.add_argument('--h3k27ac', required=required_args, help="H3K27ac-seq bam file")
     parser.add_argument('--chrom_sizes', required=required_args, help="File listing chromosome size annotaions")
+    parser.add_argument('--gene_outf', required=required_args, help="GeneList output")
+    parser.add_argument('--genetss_outf', required=required_args, help="GeneListTSS output")
     parser.add_argument('--outDir', required=required_args)
     args = parser.parse_args()
     return args 
 
-#def select_promoter_regions(output_file):
 def read_tss_file(tss_file):
     """
     Reads in TSS File
     """
     tss_df = pd.read_csv(args.tss_file, sep="\t", names=['chr', 'start', 'end', 'TargetGeneTSS', 'score', 'strand', 'start_Gene', 'end_Gene', 'TargetGene'])
     return tss_df
+
+def create_dataframes(data, len_):
+    df = pd.DataFrame()
+    df['chr'] = data.iloc[:len_, 0].values
+    df['start'] = data.iloc[len_:(len_*2), 0].values
+    df['end'] = data.iloc[(len_*2): (len_*3), 0].values
+    df['TargetGene'] = data.iloc[(len_*3): (len_*4), 0].values
+    df['score'] = data.iloc[(len_*4): (len_*5), 0].values
+    df['strand'] = data.iloc[(len_*5):, 0].values
+    return df
 
 def filter_promoters_by_distance(promoters):
     """
@@ -64,14 +74,15 @@ def process_genome_tss(args):
     feature_name =  "H3K27ac."+os.path.basename(args.h3k27ac)
     output_file = os.path.join(args.outDir,"{}.{}.CountReads.bedgraph".format(filebase, feature_name))
     tss_df = read_tss_file(args.tss_file)
-
+    print("Taking in isoform TSS file and generating Counts")
     # Take in isoform file and count reads 
     tss_df = count_single_feature_for_bed(tss_df, args.tss_file, args.chrom_sizes, args.h3k27ac, "H3K27ac", args.outDir, "Genes.TSS1kb", skip_rpkm_quantile=False, force=False, use_fast_count=True)
     chrom_sizes = args.chrom_sizes
     tss_file = args.tss_file
     sort_command = "bedtools sort -faidx {chrom_sizes} -i {tss_file} > {tss_file}.sorted; mv {tss_file}.sorted {tss_file}".format(**locals())
     run_command(sort_command)
-    print("Finished Running code")
+    print("Finished Sorting Gene TSS File")
+
     # sorted tss1kb_file
     tss1kb_file = read_tss_file(args.tss_file)
     tss1kb_file['H3K27ac.RPM'] = tss_df[feature_name+'.RPKM']
@@ -80,6 +91,7 @@ def process_genome_tss(args):
     # Take top 2 promoters based on counts 
     gene_tss_df = None
 
+    print("Looping though all genes present to select out Top Two Promoters based on RPM")
     for gene in tss1kb_file['TargetGene']: 
         tss1kb_file_subset = tss1kb_file.loc[tss1kb_file['TargetGene'].str.contains(gene)]
         sorted_tss1kb_file_subset = tss1kb_file_subset.sort_values(by=['H3K27ac.RPM'], ascending=False)
@@ -90,12 +102,30 @@ def process_genome_tss(args):
             gene_tss_df = top_two
         else:
             gene_tss_df = pd.concat([gene_tss_df, top_two])
-        print(gene_tss_df)
+    
+    print("Saving Files")
     file_output = "H3K27ac."+os.path.basename(args.h3k27ac)+"_Expressed"
-    gene_tss_df[['chr', 'start', 'end', 'TargetGeneTSS', 'score', 'strand']].to_csv("ENSEMBL_GeneTSS.txt", sep="\t", index=False, header=False)
-    gene_tss_df[['chr', 'start_Gene', 'end_Gene', 'TargetGene', 'score', 'strand']].to_csv("ENSEMBL_Genes.txt", sep="\t", index=False, header=False)
+    gene_tss_df[['chr', 'start', 'end', 'TargetGeneTSS', 'score', 'strand']].to_csv("ENSEMBL_GeneTSS.txt.tmp", sep="\t", index=False, header=False)
+    gene_tss_df[['chr', 'start_Gene', 'end_Gene', 'TargetGene', 'score', 'strand']].to_csv("ENSEMBL_Genes.txt.tmp", sep="\t", index=False, header=False)
+
+def concatenate_entries(args):
+    data = pd.read_csv("ENSEMBL_Genes.txt.tmp", sep="\t", header=None)
+    data_tss = pd.read_csv("ENSEMBL_GeneTSS.txt.tmp", sep="\t", header=None)
+    print("Concatenating Entries for final output file")
+    len_ = len(data.loc[data[0].str.contains('chr')])
+    df = create_dataframes(data, len_)
+    df.to_csv(os.path.join(args.outDir, args.gene_outf), sep="\t", header=False, index=False)
+    df2 = create_dataframes(data_tss, len_)
+    df2.to_csv(os.path.join(args.outDir, args.genetss_outf), sep="\t", header=False, index=False)
+    
+def clean_up():
+    print("Removing tmp files created during run")
+    os.remove("ENSEMBL_GeneTSS.txt.tmp")
+    os.remove("ENSEMBL_Genes.txt.tmp")
+    print("Done!")
 
 if __name__=="__main__":
     args = parseargs()
     process_genome_tss(args)
-
+    concatenate_entries(args)
+    clean_up()

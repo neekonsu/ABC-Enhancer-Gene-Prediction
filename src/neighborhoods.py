@@ -14,6 +14,7 @@ import pyranges as pr
 pd.options.display.max_colwidth = 10000 #seems to be necessary for pandas to read long file names... strange
 
 def load_genes(file,
+               tss_file,
                ue_file,
                chrom_sizes,
                outdir,
@@ -26,8 +27,7 @@ def load_genes(file,
     bed = read_bed(file) 
     genes = process_gene_bed(bed, gene_id_names, primary_id, chrom_sizes)
 
-    genes[['chr', 'start', 'end', 'name', 'score', 'strand']].to_csv(os.path.join(outdir, "GeneList.bed"),
-                                                                    sep='\t', index=False, header=False)
+    genes[['chr', 'start', 'end', 'name', 'score', 'strand']].to_csv(os.path.join(outdir, "GeneList.bed"), sep='\t', index=False, header=False)
 
     if len(expression_table_list) > 0:
         # Add expression information
@@ -68,10 +68,15 @@ def load_genes(file,
         genes_for_class_assignment = read_bed(class_gene_file)
         genes_for_class_assignment = process_gene_bed(genes_for_class_assignment, gene_id_names, primary_id, chrom_sizes, fail_on_nonunique=False)
 
-    return genes, genes_for_class_assignment
-
+    # load tss 
+    tss_for_class_assignment = read_bed(tss_file)
+    tss_for_class_assignment = process_gene_bed(tss_for_class_assignment, gene_id_names, primary_id, chrom_sizes, fail_on_nonunique=False)
+    # sort tss 
+    
+    return genes, genes_for_class_assignment, tss_for_class_assignment
 
 def annotate_genes_with_features(genes, 
+           tss1kb,
            genome_sizes,
            skip_gene_counts=False,
            features={},
@@ -83,16 +88,18 @@ def annotate_genes_with_features(genes,
 
     #Setup files for counting
     bounds_bed = os.path.join(outdir, "GeneList.bed")
-    tss1kb = make_tss_region_file(genes, outdir, genome_sizes)
     tss1kb_file = os.path.join(outdir, "GeneList.TSS1kb.bed")
+    tss1kb.to_csv(tss1kb_file, sep='\t', index=False, header=False)
 
     #Count features over genes and promoters
     genes = count_features_for_bed(genes, bounds_bed, genome_sizes, features, outdir, "Genes", force=force, use_fast_count=use_fast_count)
     tsscounts = count_features_for_bed(tss1kb, tss1kb_file, genome_sizes, features, outdir, "Genes.TSS1kb", force=force, use_fast_count=use_fast_count)
     tsscounts = tsscounts.drop(['chr','start','end','score','strand'], axis=1)
 
+    tsscounts = tsscounts.rename(columns={'name': 'promoter_id'})
+    tsscounts['name'] = [str(name).split("_")[0] for name in tsscounts['promoter_id']]
     merged = genes.merge(tsscounts, on="name", suffixes=['','.TSS1Kb'])
-
+    
     access_col = default_accessibility_feature + ".RPKM.quantile.TSS1Kb"  
     merged['PromoterActivityQuantile'] = ((0.0001+merged['H3K27ac.RPKM.quantile.TSS1Kb'])*(0.0001+merged[access_col])).rank(method='average', na_option="top", ascending=True, pct=True)
 
@@ -101,29 +108,6 @@ def annotate_genes_with_features(genes,
 
     return merged
 
-def make_tss_region_file(genes, outdir, sizes, tss_slop=500):
-    #Given a gene file, define 1kb regions around the tss of each gene
-
-    sizes_pr = df_to_pyranges(read_bed(sizes + '.bed'))
-    tss1kb = genes.loc[:,['chr','start','end','name','score','strand']]
-    tss1kb['start'] = genes['tss']
-    tss1kb['end'] = genes['tss']
-    tss1kb = df_to_pyranges(tss1kb).slack(tss_slop)
-    tss1kb = pr.gf.genome_bounds(tss1kb, sizes_pr).df[['Chromosome','Start','End','name','score','strand']]
-    tss1kb.columns = ['chr','start','end','name','score','strand']
-    tss1kb_file = os.path.join(outdir, "GeneList.TSS1kb.bed")
-    tss1kb.to_csv(tss1kb_file, header=False, index=False, sep='\t')
-
-    #The TSS1kb file should be sorted
-    sort_command = "bedtools sort -faidx {sizes} -i {tss1kb_file} > {tss1kb_file}.sorted; mv {tss1kb_file}.sorted {tss1kb_file}".format(**locals())
-    run_command(sort_command)
-
-    # p = Popen(sort_command, stdout=PIPE, stderr=PIPE, shell=True)
-    # print("Sorting Genes.TSS1kb file. \n Running: " + sort_command + "\n")
-    # (stdoutdata, stderrdata) = p.communicate()
-    # err = str(stderrdata, 'utf-8')
-
-    return(tss1kb)
 
 def process_gene_bed(bed, name_cols, main_name, chrom_sizes=None, fail_on_nonunique=True):
 
@@ -142,8 +126,6 @@ def process_gene_bed(bed, name_cols, main_name, chrom_sizes=None, fail_on_nonuni
     bed['name'] = bed[main_name]
     #bed = bed.sort_values(by=['chr','start']) #JN Keep original sort order
 
-    bed['tss'] = get_tss_for_bed(bed)
-
     bed.drop_duplicates(inplace=True)
 
     #Remove genes that are not defined in chromosomes file
@@ -158,13 +140,6 @@ def process_gene_bed(bed, name_cols, main_name, chrom_sizes=None, fail_on_nonuni
 
     return bed
 
-def get_tss_for_bed(bed):
-    assert_bed3(bed)
-    tss = bed['start'].copy()
-    tss.loc[bed.loc[:,'strand'] == "-"] = bed.loc[bed.loc[:,'strand'] == "-",'end']
-
-    return tss
-
 def assert_bed3(df):
     assert(type(df).__name__ == "DataFrame")
     assert('chr' in df.columns)
@@ -176,6 +151,7 @@ def load_enhancers(outdir=".",
                    genome_sizes="",
                    features={},
                    genes=None,
+                   tss=None,
                    force=False,
                    candidate_peaks="",
                    skip_rpkm_quantile=False,
@@ -199,7 +175,7 @@ def load_enhancers(outdir=".",
     # Assign categories
     if genes is not None:
         print("Assigning classes to enhancers")
-        enhancers = assign_enhancer_classes(enhancers, genes, tss_slop = tss_slop_for_class_assignment)
+        enhancers = assign_enhancer_classes(enhancers, genes, tss) 
 
     #TO DO: Should qnorm each bam file separately (before averaging). Currently qnorm being performed on the average
     enhancers = run_qnorm(enhancers, qnorm)
@@ -211,10 +187,10 @@ def load_enhancers(outdir=".",
                 sep='\t', index=False, header=False)
 
 #Kristy's version
-def assign_enhancer_classes(enhancers, genes, tss_slop=500):
+def assign_enhancer_classes(enhancers, genes, tss, tss_slop=500):
 
     # build pyranges df 
-    tss_pyranges = df_to_pyranges(genes, start_col='tss', end_col='tss', start_slop=tss_slop, end_slop=tss_slop)
+    tss_pyranges = df_to_pyranges(tss)
     gene_pyranges = df_to_pyranges(genes)
 
     def get_class_pyranges(enhancers, tss_pyranges = tss_pyranges, gene_pyranges = gene_pyranges): 
@@ -308,10 +284,6 @@ def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verb
     #Then use bedtools coverage, then sort back to expected order
     #Requires an faidx file with chr in the same order as the bam file.
 
-    # import pdb
-    # #pdb.Pdb(stdout=sys.__stdout__).set_trace()
-    # pdb.set_trace()
-
     if use_fast_count:
         temp_output = output + ".temp_sort_order"
         faidx_command = "awk 'FNR==NR {{x2[$1] = $0; next}} $1 in x2 {{print x2[$1]}}' {genome_sizes} <(samtools view -H {bamfile} | grep SQ | cut -f 2 | cut -c 4- )  > {temp_output}".format(**locals())
@@ -355,7 +327,6 @@ def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verb
             completed = False
 
     # Check for successful finish -- BEDTools can run into memory problems
-    #import pdb; pdb.set_trace()
     err = str(stderrdata, 'utf-8')
     if ("terminated" not in err) and ("Error" not in err) and ("ERROR" not in err) and any(data):
         print("BEDTools completed successfully. \n")
