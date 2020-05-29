@@ -51,7 +51,7 @@ def get_model_argument_parser():
     parser.add_argument('--tss_slop', type=int, default=500, help="Distance from tss to search for self-promoters")
     parser.add_argument('--chromosomes', default="all", help="chromosomes to make predictions for. Defaults to intersection of all chromosomes in --genes and --enhancers")
     parser.add_argument('--include_chrY', '-y', action='store_true', help="Make predictions on Y chromosome")
-    parser.add_argument('--run_metrics', type=bool, default=True, help="Run Metrics")
+    parser.add_argument('--run_metrics', action='store_true', help="Run Metrics")
 
     return parser
 

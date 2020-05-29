@@ -5,7 +5,7 @@ working_dir: "/users/kmualim/updated_ABC/github/"
 output_data_dir: "/srv/scratch/kmualim/celltype_files/"
 # directory to output ABC Predictions
 predictions_results_dir: "/mnt/lab_data2/kmualim/modified_ABC/apr10_ABC/"
-hic_dir: "/mnt/lab_data2/kmualim/data/send_to_Kristy/HiC/AverageHiC/raw"
+hic_dir: /seq/lincRNA/RAP/External/Rao2014-HiC/190924_new_structure/hic/191020_Average/out/ #"/mnt/lab_data2/kmualim/data/send_to_Kristy/HiC/AverageHiC/raw"
 
 # parameters to determine whether to apply pooling + number of threads 
 # leave blank if not applicable 
@@ -15,7 +15,6 @@ threads: 10
 # This section should not need any changes, it works off the ABC repo and accessing files that are present in the repository 
 code: "/ABC-Enhancer-Gene-Prediction/src/"
 workflow_scripts: "/ABC-Enhancer-Gene-Prediction/Snakefiles/workflow/scripts/"
-
 
 params_download:
         genome: "hg19"
@@ -33,16 +32,16 @@ params_macs:
 
 # These parameters are used to run the Run Candidate Regions portion of the abc code 
 params_candidate:
-        chrom_sizes: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction/reference/chr_sizes"
+        chrom_sizes: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction/example_chr22/reference/chr22"
         regions_blacklist: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction/reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
-        genome_tss: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.bed"
+        genome_tss: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction/example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS.500bp.chr22.bed"
         peakExtendFromSummit: 250
-        nStrongestPeaks: 150000
+        nStrongestPeaks: 3000
 
 # These parameters are used to run the Run Neighborhoods portion of the abc code
 params_neighborhoods:
         ubiquitous_genes: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction/reference/UbiquitouslyExpressedGenesHG19.txt"
-        genes: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.bed"
+        genes: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction/example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed"
         qnorm: "/seq/lincRNA/RAP/ABC/200330_ENCODE/200525/ABC-Enhancer-Gene-Prediction//src/EnhancersQNormRef.K562.txt"
 
 # These parameters are used to run the Predictions portion of the abc code

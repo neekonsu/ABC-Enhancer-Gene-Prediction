@@ -45,7 +45,7 @@ snakemake -s "$CODEDIR/Snakefiles/workflow/rules/preprocess/Snakefile" \
 snakemake -s "$CODEDIR/Snakefiles/workflow/rules/abc_code/Snakefile" \
 	--configfile $CODEDIR/Snakefiles/workflow/envs/wd_Broad.yaml \
 	--config working_dir=$PROJECT download_dir=$PROJECT/download output_data_dir=$PROJECT/download \
-			predictions_results_dir=$PROJECT/abc_out \
+			predictions_results_dir=$PROJECT/abc_out_jn \
 			hic_dir=/seq/lincRNA/RAP/External/Rao2014-HiC/190924_new_structure/hic/191020_Average/out/ \
 		#--profile $CODEDIR/Snakefiles/workflow/envs/BroadGSA/ \
 	 &> logs/download.out &

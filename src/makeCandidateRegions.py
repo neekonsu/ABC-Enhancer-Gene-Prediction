@@ -59,10 +59,11 @@ def processCellType(args):
                                     minPeakWidth = args.minPeakWidth,
                                     outdir = args.outDir)
    
-    grab_nearest_tss_from_peak(macs_peaks = args.narrowPeak,
-                                    genome_tss = args.genome_tss,
-                                    outdir = args.outDir)
-    PeakFileQC(macs_peaks = args.narrowPeak, outdir = args.outDir)
+    #Fail on chr22 run only.
+    # grab_nearest_tss_from_peak(macs_peaks = args.narrowPeak,
+    #                                 genome_tss = args.genome_tss,
+    #                                 outdir = args.outDir)
+    # PeakFileQC(macs_peaks = args.narrowPeak, outdir = args.outDir)
         
 def main(args):
     processCellType(args)
