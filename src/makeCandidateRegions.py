@@ -21,7 +21,6 @@ def parseargs(required_args=True):
     parser.add_argument('--bam', required=required_args, help="DNAase-Seq or ATAC-Seq bam file")
     parser.add_argument('--chrom_sizes', required=required_args, help="File listing chromosome size annotaions")
     parser.add_argument('--outDir', required=required_args)
-    
     parser.add_argument('--nStrongestPeaks', default=175000, help="Number of peaks to use for defining candidate regions")
     parser.add_argument('--peakExtendFromSummit', default=250, help="Number of base pairs to extend each preak from its summit (or from both ends of region if using --ignoreSummits)")
     parser.add_argument('--ignoreSummits', action="store_true", help="Compute peaks using the full peak regions, rather than extending from summit.")
@@ -29,7 +28,6 @@ def parseargs(required_args=True):
 
     parser.add_argument('--regions_whitelist', default="", help="Bed file of regions to forcibly include in candidate enhancers. Overrides regions_blacklist")
     parser.add_argument('--regions_blacklist', default="", help="Bed file of regions to forcibly exclude from candidate enhancers")
-    
     parser.add_argument('--genome_tss', required=True, help="Gene TSS file to grab QC Metrics for peaks")
     args = parser.parse_args()
     return(args)
@@ -58,7 +56,6 @@ def processCellType(args):
                                     peak_extend = args.peakExtendFromSummit, 
                                     minPeakWidth = args.minPeakWidth,
                                     outdir = args.outDir)
-    
     grab_nearest_tss_from_peak(macs_peaks = args.narrowPeak,
                                     genome_tss = args.genome_tss,
                                     outdir = args.outDir)

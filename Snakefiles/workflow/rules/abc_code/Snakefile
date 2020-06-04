@@ -10,33 +10,85 @@ import os
 with open(config['output_data_dir']+"/input_files/"+"/input_data_lookup.json", "r") as handle:
 	sample_lookup = json.load(handle)
 
+# obtain all bam files for indexing
+bamfiles = [value['File accession_Accessibility bam'] for key,value in sample_lookup.items()] + [value['File accession_H3K27ac bam'] for key,value in sample_lookup.items()]
+print(bamfiles)
+
 ### Overall rule that runs the ABC pipeline from start to finish
 rule all:
-	input: expand(["{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted.candidateRegions.bed", "{config}/Neighborhood_{sample}/GeneList.txt", "{config}/Neighborhood_{sample}/EnhancerList.txt", "{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz"], config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
+	input: expand("{config}/data/{single_bam}.bai", config=config['output_data_dir'], single_bam= bamfiles), expand(["{config}/Peaks_{sample}/NA_peaks.narrowPeak","{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted", "{config}/Peaks_{sample}/NA_peaks.narrowPeak.sorted.candidateRegions.bed", "{config}/Neighborhood_{sample}/GeneList.txt", "{config}/Neighborhood_{sample}/EnhancerList.txt", "{config}/Prediction_{sample}/EnhancerPredictionsAllPutative.txt.gz"], config=config['predictions_results_dir'], sample=list(sample_lookup.keys()))
 
 ### This function generates DHS bam files for each sample for input into rule call_macs_peaks and rule call_candidate_regions
 def rule_input(wildcards):
 	""" Returns DNA bam file for specific sample """
 	return config['output_data_dir']+"/data/"+sample_lookup[wildcards.sample]['File accession_Accessibility bam']
 
-### This rule runs macs callpeaks on DHS bam files for samples 
-### Takes in DHS bam file and outputs NA_peaks.narrowPeak
-### narrowPeak file also sorted for input into rule call_candidate_regions
+### This function generates the bam files for DHS, H3K27ac
+def rule_getbam(wildcards):
+        """ Returns DHS and H3K27ac bam file for specific sample """
+        files = [sample_lookup[wildcards.sample]['File accession_Accessibility bam'], sample_lookup[wildcards.sample]['File accession_H3K27ac bam']]
+        return_files = [config['output_data_dir']+"/data/"+str(file) for file in files] + [config['output_data_dir']+"/data/"+str(file)+".bai" for file in files]
+        return return_files
+
+rule index_bam_files:
+        input: expand(config['output_data_dir']+"/data/{single_bam}", single_bam= bamfiles)
+
+        params: threads = config['threads']
+
+        output: expand(config['output_data_dir']+"/data/{single_bam}.bai", single_bam= bamfiles)
+
+        shell:
+                """
+                samtools index {input[0]} -@ {params.threads}
+                samtools index {input[1]} -@ {params.threads}
+		"""
+
+## This rule runs macs callpeaks on DHS bam files for samples 
+## Takes in DHS bam file and outputs NA_peaks.narrowPeak
+## narrowPeak file also sorted for input into rule call_candidate_regions
 rule call_macs_peaks: 
 	input: 
 		data = rule_input,
 		input_dir = config['output_data_dir']+"/data/",
-		output_dir = config['predictions_results_dir']+"/Peaks_{sample}"
+		output_dir = config['predictions_results_dir']+"/Peaks_{sample}",
 	params:
 		pval = config['params_macs']['pval'],
 		threads = config['params_macs']['threads'],
-		chrom_sizes = workflow.workdir_init+config['params_candidate']['chrom_sizes']
+		chrom_sizes = config['params_candidate']['chrom_sizes']
+	conda: config['envs_dir']+"/macs.yaml"
 	output: 
 		file = config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak"
 	shell: 
 		""" 
 		macs2 callpeak -f BAM -g hs -p {params.pval} --call-summits --outdir {input.output_dir} -t {input.data}
-		bedtools sort -faidx {params.chrom_sizes} -i {output.file} > {output.file}.sorted
+		"""
+
+#JN split macs rule into macs and sort
+rule sort_macs_peaks: 
+	input: 
+		unsorted_macs = config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak",
+		output_dir = config['predictions_results_dir']+"/Peaks_{sample}"
+	params:
+		chrom_sizes = config['params_candidate']['chrom_sizes']#workflow.workdir_init+config['params_candidate']['chrom_sizes']
+	output: 
+		file = config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak.sorted"
+	shell: 
+		""" 
+		bedtools sort -faidx {params.chrom_sizes} -i {input.unsorted_macs} > {output.file}
+		"""
+
+# Add Joe's Code
+rule sort_macs_peaks: 
+	input: 
+		unsorted_macs = config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak",
+		output_dir = config['predictions_results_dir']+"/Peaks_{sample}"
+	params:
+		chrom_sizes = config['params_candidate']['chrom_sizes']
+	output: 
+		file = config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak.sorted"
+	shell: 
+		""" 
+		bedtools sort -faidx {params.chrom_sizes} -i {input.unsorted_macs} > {output.file}
 		"""
 
 ### This rule runs ABC Candidate Regions script for samples
@@ -54,18 +106,12 @@ rule call_candidate_regions:
                 peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
 		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
 		threads = 10
+	conda: config['envs_dir']+"/abc_code.yaml"
 	output: config['predictions_results_dir']+"/Peaks_{sample}/NA_peaks.narrowPeak.sorted.candidateRegions.bed"
                                                                   
 	shell: """
 		python {input.exe} --narrowPeak {input.data} --bam {input.bam_inputs} --outDir {input.output_dir} --chrom_sizes {params.chrom_sizes} --regions_blacklist {params.regions_blacklist} --regions_whitelist {params.genome_tss} --peakExtendFromSummit {params.peakExtendFromSummit} --nStrongestPeak {params.nStrongestPeak} --genome_tss {params.genome_tss}
 		"""
-
-### This function generates the bam files for DHS, H3K27ac
-def rule_getbam(wildcards):
-        """ Returns DHS and H3K27ac bam file for specific sample """
-        files = [sample_lookup[wildcards.sample]['File accession_Accessibility bam'], sample_lookup[wildcards.sample]['File accession_H3K27ac bam']]
-	return_files = [config['output_data_dir']+"/data/"+str(file) for file in files]
-	return return_files
 
 ### This rule runs ABC Neighborhoods script for samples 
 ### Takes in NA_peaks.narrowPeak.sorted generated from rule call_candidate_regions and DHS Bam file and outputs EnhancerList.txt and GeneList.txt for input into rule predictions

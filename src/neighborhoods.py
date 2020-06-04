@@ -68,12 +68,7 @@ def load_genes(file,
         genes_for_class_assignment = read_bed(class_gene_file)
         genes_for_class_assignment = process_gene_bed(genes_for_class_assignment, gene_id_names, primary_id, chrom_sizes, fail_on_nonunique=False)
 
-    # load tss 
-    tss_for_class_assignment = read_bed(tss_file)
-    tss_for_class_assignment = process_gene_bed(tss_for_class_assignment, gene_id_names, primary_id, chrom_sizes, fail_on_nonunique=False)
-    # sort tss 
-    
-    return genes, genes_for_class_assignment, tss_for_class_assignment
+    return genes, genes_for_class_assignment
 
 def annotate_genes_with_features(genes, 
            tss1kb,
