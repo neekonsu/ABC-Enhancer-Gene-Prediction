@@ -21,7 +21,7 @@ FILES_OUTPUT = [file.split("    ")[0].split(".")[0] for file in FILES]
 
 FINAL_FILES=[]
 FINAL_FILES.extend(expand(config['output_data_dir']+"/data/{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
-FINAL_FILES.extend(expand(config['output_data_dir']+"/data/{samples}_pooled.nodup.bam", samples=FILES_OUTPUT))
+FINAL_FILES.extend(expand(config['output_data_dir']+"/data/{samples}_pooled.bam", samples=FILES_OUTPUT))
 
 ### Overall rule that runs rule remove_pe_dup_filter_bam and rule merge_pe_duplicates
 rule all:
@@ -69,3 +69,4 @@ rule merge_pe_duplicates:
                 """
 		bash {input.exe} {input.indir}/data/ {input.indir}/data/ {input.datafile} {params.threads}
                 """ 
+
