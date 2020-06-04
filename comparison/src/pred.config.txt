@@ -1,0 +1,13 @@
+pred.col	agg.func	fill.val	lowerIsMoreConfident
+ABC.Score	sum	0	FALSE
+distance	mean	Inf	TRUE
+activity_base	sum	0	FALSE
+hic_contact	mean	0	FALSE
+hic.distance	mean	0	FALSE
+ATAC_HiC.Score	sum	0	FALSE
+ATAC_powerlaw.Score	sum	0	FALSE
+pvalue	min	1	TRUE
+
+
+
+

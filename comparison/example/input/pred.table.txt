@@ -1,0 +1,4 @@
+name	path
+K562_K562HiC	/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/input/K562.ABC.Predictions.K562HiC.chrX.ENCODE.format.txt.gz
+K562_AvgHiC	/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/input/K562.ABC.Predictions.AvgHiC.chrX.ENCODE.format.txt.gz
+

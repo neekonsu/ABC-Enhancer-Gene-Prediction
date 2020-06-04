@@ -1,0 +1,9 @@
+experimentalPositiveColumn	Regulated
+ignoreExptMissingPredictions	FALSE
+outDir	/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/out/
+code	/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/comparison.R
+help	FALSE
+predictions	/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/input/pred.table.txt
+experimentalData	/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/input/K562.ExperimentalData.slim.txt
+plotConfig	/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/plot.config.txt
+predConfig	/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/pred.config.txt

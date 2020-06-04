@@ -1,0 +1,2 @@
+plot.name	pred.cols
+ABC	K562_K562HiC.ABC.Score,K562_AvgHiC.ABC.Score,K562_K562HiC.distance
