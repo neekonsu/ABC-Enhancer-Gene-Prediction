@@ -55,14 +55,14 @@ option.list <- list(
 opt <- parse_args(OptionParser(option_list=option.list))
 
 #For Testing at Broad
-basedir <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/"
-opt$code <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/comparison.R"
-opt$predictions <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/input/pred.table.txt"
-opt$experimentalData <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/input/K562.ExperimentalData.slim.txt"
-opt$plotConfig <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/plot.config.txt"
-opt$predConfig <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/pred.config.txt"
-opt$outDir <- paste0(basedir, "out/")
-opt$ignoreExptMissingPredictions <- FALSE
+# basedir <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/"
+# opt$code <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/comparison.R"
+# opt$predictions <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/input/pred.table.txt"
+# opt$experimentalData <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/example/input/K562.ExperimentalData.slim.txt"
+# opt$plotConfig <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/plot.config.txt"
+# opt$predConfig <- "/seq/lincRNA/jnasser/EP_prediction/code/ABC_code_better_comparison/ABC-Enhancer-Gene-Prediction/comparison/src/pred.config.txt"
+# opt$outDir <- paste0(basedir, "out/")
+# opt$ignoreExptMissingPredictions <- FALSE
 
 source(opt$code)
 dir.create(file.path(opt$outDir))
