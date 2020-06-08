@@ -10,7 +10,7 @@ The files in this directory allows for the Comparison between ABC Predictions an
 
 Sample Command:
 ```
-Rscript comparePredictionsToExperiment.R --experimentalData example_data/EnhancerPredictionsAllPutative_chr22.txt --predictions data/ExperimentalData.Gasperini.FulcoNasser.191021.txt --plotConfig CRISPR/plot.config.txt --predConfig CRISPR/pred.config.txt
+Rscript comparePredictionsToExperiment.R --experimentalData example_data/EnhancerPredictionsAllPutative_chr22.txt --predictions data/ExperimentalData.Gasperini.FulcoNasser.191021.txt --plotConfig CRISPR/plot.config.txt --predConfig CRISPR/pred.config.txt --CellType K562
 ```
 
 exampleData can be found here: 
