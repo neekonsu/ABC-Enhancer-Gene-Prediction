@@ -9,6 +9,14 @@ def is_unique(entries):
     a = entries.to_numpy()
     return (a[0] == a[1:]).all()
 
+def check_x_and_y_single(entries, column):
+    columns = column
+    return_values = ['File accession_Accessibility bam']
+    if not is_unique(entries[columns[0]]):
+        return str(return_values[0]), str(return_values[1])
+    else:
+        return -1, -1
+
 def check_x_and_y(entries, column):
     columns = column
     return_values = ['File accession_Accessibility bam', 'File accession_H3K27ac bam']
@@ -61,10 +69,14 @@ def prepareLookup(args, metadata, title):
     celltypes = metadata['Biosample term name'].drop_duplicates()
     celltypes.to_csv(os.path.join(args.outdir, "cells.txt"), sep="\t", header=False, index=False)
     metadata['File accession_Accessibility bam'] = metadata['File accession_Accessibility bam']+".bam"
-    metadata['File accession_H3K27ac bam'] = metadata['File accession_H3K27ac bam']+".bam"
-    metadata[['Biosample term name', 'File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_csv(os.path.join(args.outdir, str(title)+".tsv"), sep="\t", header=False, index=False)
-    new_data = metadata.rename(index={key:value for key, value in zip(metadata.index, metadata['Biosample term name'])})
-    new_data[['File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_json(os.path.join(args.outdir, str(title)+".json"), orient='index')
+    if args.h3k27ac is not None:
+        metadata['File accession_H3K27ac bam'] = metadata['File accession_H3K27ac bam']+".bam"
+        metadata[['Biosample term name', 'File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_csv(os.path.join(args.outdir, str(title)+".tsv"), sep="\t", header=False, index=False)
+        new_data = metadata.rename(index={key:value for key, value in zip(metadata.index, metadata['Biosample term name'])})
+        new_data[['File accession_Accessibility bam', 'File accession_H3K27ac bam']].to_json(os.path.join(args.outdir, str(title)+".json"), orient='index')
+    else:
+        new_data = metadata.rename(index={key:value for key, value in zip(metadata.index, metadata['Biosample term name'])})
+        new_data[['File accession_Accessibility bam']].to_json(os.path.join(args.outdir, str(title)+".json"), orient='index')
     return metadata
 
 def mapExperimentToLength(dhs, dhs_fastq):
@@ -72,21 +84,28 @@ def mapExperimentToLength(dhs, dhs_fastq):
     dhs_bam = dhs.loc[(dhs['File format']=='bam') & (dhs['Output type']=='unfiltered alignments')]
     paired_type = []
     for name in dhs_bam['Experiment accession']:
-        matched = dhs_lookup['Run type'].loc[dhs_lookup['Experiment accession']==name].values[0]
-        paired_type.append(matched)
+        matched = dhs_lookup['Run type'].loc[dhs_lookup['Experiment accession']==name]
+        if len(matched) >1 :
+            type_ = matched.values[0]
+        else:
+            type_ = "single-ended"
+        paired_type.append(type_)
     dhs_bam['Run type'] = paired_type
     return dhs_bam
         
 
 # This function updates the lookup table such that entries that have bamfiles with biological replicates undergo a merging process and the collective pooled bam is now updated in the table 
-def getExperimentsCombined(metadata, biosample_entries):
+def getExperimentsCombined(args,metadata, biosample_entries):
     to_combine = {}
     df = metadata
     update_lookup = {}
     for biosample in list(biosample_entries):
         biosample_entry = metadata.loc[metadata['Biosample term name']==biosample]
         if len(biosample_entry) > 1:
-            col1, col2 = check_x_and_y(biosample_entry, column=['Biological replicate(s)_Accessibility', 'Biological replicate(s)_H3K27ac'])
+            if args.h3k27ac is not None:
+                col1, col2 = check_x_and_y(biosample_entry, column=['Biological replicate(s)_Accessibility', 'Biological replicate(s)_H3K27ac'])
+            else:
+                col1, _ = check_x_and_y(biosample_entry, column=['Biological replicate(s)_Accessibility'])
             if col1 != -1:
                 to_combine[str(biosample).replace(",", "").replace(" ", "_")] = [str(entry)+".bam" for entry in biosample_entry.loc[:,col1]]
                 index = list(biosample_entry.index.astype('int'))
@@ -107,22 +126,23 @@ def save_metadata(args, duplicates):
 # It saves pairedend bams and singleend bams for removal of duplicates 
 def obtainDuplicated(args, subset_intersected):
     dhs_duplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_Accessibility'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_Accessibility'])
-
-    h3k27acduplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_H3K27ac'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_H3K27ac'])
+    if args.h3k27ac is not None:
+        h3k27acduplicates = subset_intersected[subset_intersected.duplicated(['Experiment accession_H3K27ac'], keep=False)].drop_duplicates(['Biosample term name', 'Biological replicate(s)_H3K27ac'])
     
-    comb_duplicates = pd.concat([dhs_duplicates, h3k27acduplicates])
-    duplicates = comb_duplicates.drop_duplicates()
+        comb_duplicates = pd.concat([dhs_duplicates, h3k27acduplicates])
+        duplicates = comb_duplicates.drop_duplicates()
+        duplicates = rename_bam_for_pairedend(duplicates, 'H3K27ac', "paired-ended")
+    else: 
+        duplicates = dhs_duplicates.drop_duplicates()
     save_metadata(args, duplicates)
 
     metadata_orig = duplicates.copy()
     # rename paired-end duplicates file
-    metadata_tmp = rename_bam_for_pairedend(duplicates, 'Accessibility', "paired-ended")
-    duplicates = rename_bam_for_pairedend(metadata_tmp, 'H3K27ac', "paired-ended")
-    
+    duplicates = rename_bam_for_pairedend(duplicates, 'Accessibility', "paired-ended")
     df_biological =  duplicates.loc[duplicates.duplicated(['Biosample term name'], keep=False)]
     df_biological_rep = df_biological['Biosample term name'].drop_duplicates()
 
-    to_combine, metadata_unique = getExperimentsCombined(duplicates, df_biological_rep)
+    to_combine, metadata_unique = getExperimentsCombined(args, duplicates, df_biological_rep)
     metadata_unique.to_csv("test.txt", sep="\t", index=False)
     with open(os.path.join(args.outdir, "Experiments_ToCombine.txt.tmp"), "w") as f:
         for key, value in zip(to_combine.keys(), to_combine.values()):

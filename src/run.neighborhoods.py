@@ -34,6 +34,7 @@ def parseargs(required_args=True):
 
     #Other
     parser.add_argument('--tss_slop_for_class_assignment', default=500, type=int, help="Consider an element a promoter if it is within this many bp of a tss")
+    parser.add_argument('--tss', help="File for Gene TSS")
     parser.add_argument('--skip_rpkm_quantile', action="store_true", help="Do not compute RPKM and quantiles in EnhancerList.txt")
     parser.add_argument('--use_secondary_counting_method', action="store_true", help="Use a slightly slower way to count bam over bed. Also requires more memory. But is more stable")
     parser.add_argument('--chrom_sizes', required=required_args, help="Genome file listing chromosome sizes. Also requires associated .bed file")
@@ -55,7 +56,8 @@ def processCellType(args):
     os.makedirs(args.outdir, exist_ok=True)
 
     #Setup Genes
-    genes, genes_for_class_assignment = load_genes(file = args.genes, 
+    genes, genes_for_class_assignment, tss = load_genes(file = args.genes, 
+                                                tss_file = args.tss, 
                                                 ue_file = args.ubiquitously_expressed_genes,
                                                 chrom_sizes = args.chrom_sizes,
                                                 outdir = args.outdir, 
@@ -65,7 +67,8 @@ def processCellType(args):
                                                 cellType = args.cellType,
                                                 class_gene_file = args.genes_for_class_assignment)
 
-    annotate_genes_with_features(genes = genes, 
+    annotate_genes_with_features(genes = genes,
+                                    tss1kb = tss,
                                     genome_sizes = args.chrom_sizes, 
                                     use_fast_count = (not args.use_secondary_counting_method),
                                     default_accessibility_feature = params['default_accessibility_feature'],
@@ -74,6 +77,7 @@ def processCellType(args):
 
     #Setup Candidate Enhancers
     load_enhancers(genes=genes_for_class_assignment, 
+                    tss = tss, 
                     genome_sizes=args.chrom_sizes, 
                     candidate_peaks=args.candidate_enhancer_regions, 
                     skip_rpkm_quantile=args.skip_rpkm_quantile, 
