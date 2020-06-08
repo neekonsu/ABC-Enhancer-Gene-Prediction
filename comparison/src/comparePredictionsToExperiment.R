@@ -16,7 +16,7 @@
 #       Rscript comparePredictionsToExperiment.R --predictions pred.table.txt --experimentalData expt.txt --plotConfig plot.config.txt --predConfig pred.config.txt
 #
 # This code is intended to evaluate a various enhancer-gene prediction models against a set of experimental data
-# The code will overlap the predictions and experimental data and generate appropriate evaluation metrics (ie pr curves)
+# The code will overlap the predictions and experimental data and generate appropriate evaluation metrics (eg pr curves)
 #
 # The plotConfig file should contain one line per PR curve plot. Scatter plots will be generated for all prediction columns defined in predConfig
 #
@@ -26,7 +26,6 @@
 # The predConfig file describes how to handle these cases. 
 #
 # Other:
-# - Assumes prediction columns are monotonic increasing! (A hack is employed for distance)
 # - Can't distinguish between a missing prediction and a non-prediction
 #
 # To do:
@@ -50,7 +49,7 @@ option.list <- list(
   make_option("--predConfig", type="character", help="File describing how to aggregate/fill prediction columns"),
   make_option("--ignoreExptMissingPredictions", default=FALSE, action="store_true", help="Ignore EG pairs which do not have predictions. Do not fill based on predConfig"),
   make_option("--outDir", default = ".", type="character", help="Output directory"),
-  make_option("--code", default = ".", type="character", help="code directory")
+  make_option("--code", default = ".", type="character", help="comparison code helper functions")
 )
 opt <- parse_args(OptionParser(option_list=option.list))
 
