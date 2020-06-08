@@ -12,6 +12,7 @@ src/plot.config.txt: Defines which PR curves to make
 
 ```
 
+Example Command:
 ```
 Rscript src/comparePredictionsToExperiment.R \
 --predictions example/input/pred.table.txt \
@@ -20,6 +21,6 @@ Rscript src/comparePredictionsToExperiment.R \
 --plotConfig src/plot.config.txt \
 --predConfig src/pred.config.txt \
 --code src/comparison.R \
---outDir /seq/lincRNA/jnasser/junk
+--outDir example/out
 
 ```
