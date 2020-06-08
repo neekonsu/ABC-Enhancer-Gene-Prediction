@@ -1,4 +1,5 @@
-####################Joseph Nasser
+#####################
+# Joseph Nasser
 # October 16 2019
 #
 # Evaluate predictive model against experimental data
@@ -9,7 +10,7 @@
 #         - GenomicRanges (1.28.6)
 #         - ROCR (1.0-7)
 #         - ggplot2 (3.0.0)
-#         - caTools (1.17.1
+#         - caTools (1.17.1)
 #
 # Usage:
 #       Rscript comparePredictionsToExperiment.R --predictions pred.txt --experimentalData expt.txt --plotConfig plot.config.txt --predConfig pred.config.txt
@@ -42,6 +43,7 @@ option.list <- list(
   make_option("--predictions", type="character", help="Predictions file (accepts comma delimited list)"),
   make_option("--experimentalData", type="character", help="File listing perturbational data (accepts comma delimited list)"),
   make_option("--experimentalPositiveColumn", type="character", default="Regulated", help="Column of experimentalData to consider an experimental positive"),
+  make_option("--CellType", type="character", help="CellType"),
   make_option("--plotConfig", type="character", help="File describing which plots to make"),
   make_option("--predConfig", type="character", help="File describing how to aggregate/fill prediction columns"),
   make_option("--ignoreExptMissingPredictions", default=FALSE, action="store_true", help="Ignore EG pairs which do not have predictions. Do not fill based on predConfig"),
@@ -65,6 +67,7 @@ source(file.path(opt$codeDir, "comparison.R"))
 #Read input data
 print("Reading input files")
 pred <- loadFileString(opt$predictions)
+pred$CellType=opt$CellType
 expt <- loadFileString(opt$experimentalData)
 expt <- subset(expt, IncludeInModel)
 
@@ -76,7 +79,6 @@ qcExpt(expt, opt)
 
 # Merge experimental data and predictions
 print("Merging experiment and predictions")
-print(opt$ignoreExptMissingPredictions)
 merged <- combineExptPred(expt = expt, 
                           pred = pred,
                           config = opt$predConfig,

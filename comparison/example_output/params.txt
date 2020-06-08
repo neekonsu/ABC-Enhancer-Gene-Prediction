@@ -1,0 +1,10 @@
+predictions	../example_data/EnhancerPredictionsAllPutative_chr22.txt
+experimentalData	/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/comparison/data/ExperimentalData.Gasperini.FulcoNasser.191021.txt
+experimentalPositiveColumn	Regulated
+CellType	K562
+plotConfig	/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/comparison/CRISPR/plot.config.txt
+predConfig	/users/kmualim/updated_ABC/github/ABC-Enhancer-Gene-Prediction/comparison/CRISPR/pred.config.txt
+ignoreExptMissingPredictions	FALSE
+outDir	.
+codeDir	.
+help	FALSE
