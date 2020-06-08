@@ -13,6 +13,11 @@ Sample Command:
 Rscript comparePredictionsToExperiment.R --experimentalData example_data/EnhancerPredictionsAllPutative_chr22.txt --predictions data/ExperimentalData.Gasperini.FulcoNasser.191021.txt --plotConfig CRISPR/plot.config.txt --predConfig CRISPR/pred.config.txt
 ```
 
+exampleData can be found here: 
+```
+http://mitra.stanford.edu/kundaje/projects/ABC_links/jamboree_june_2020/EnhancerPredictionsAllPutative_chr22.txt.gz 
+```
+
 ## Description of Comparison Code 
 This code is intended to evaluate a predictive model against a set of experimental data
 1. Generates PR curves and scatter plots
