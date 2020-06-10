@@ -1,4 +1,4 @@
-#! bin/bash 
+#bin/bash 
 
 import sys, os
 import argparse 
@@ -13,8 +13,8 @@ from subprocess import check_call, check_output, PIPE, Popen, getoutput, CalledP
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dhs', help="DNase experiments file")
-    parser.add_argument('--h3k27ac', help="H3K27ac experiments file")
     parser.add_argument('--dhs_fastq', help="DNase experiments file fastq metadata")
+    parser.add_argument('--h3k27ac', help="H3K27ac experiments file")
     parser.add_argument('--h3k27ac_fastq', help="H3K27ac experiments file fastq metadata")
     parser.add_argument('--atac', help="ATAC experiments file")
     parser.add_argument('--atac_fastq', help="ATAC experiments file fastq metadata")
@@ -34,33 +34,31 @@ def main():
         outfile = downloadFiles(args, metadata)
     save_paired_single_end_files(args, metadata)
 
-def load_data(args):
+def load_data(bam, fastq):
     """
     Loads data
     """
     print("Opening DHS and H3K27ac Experiment Files...")
-    dhs_data = pd.read_csv(args.dhs, sep="\t")
-    h3k27ac_data = pd.read_csv(args.h3k27ac, sep="\t")
+    dhs_data = pd.read_csv(bam, sep="\t")
     print("Opening DHS and H3K27ac Fastq Experiment Files...")
-    dhs_fastq = pd.read_csv(args.dhs_fastq, sep="\t")
-    h3k27ac_fastq = pd.read_csv(args.h3k27ac_fastq, sep="\t")
-    return dhs_data, h3k27ac_data, dhs_fastq, h3k27ac_fastq
+    dhs_fastq = pd.read_csv(fastq, sep="\t")
+    return dhs_data, dhs_fastq 
 
 def assignFiltersToDataFrame(args):
-    # TODO: figure out how to call fastq files + bam files  
     # open dataframes 
-
     # load data 
-    dhs_data, h3k27ac_data, dhs_fastq, h3k27ac_fastq = load_data(args)
-
-    # fill up dhs mapped read length table with numbers
-    
+    dhs_data, dhs_fastq = load_data(args.dhs, args.dhs_fastq)
     dhs_alignment_bam = mapExperimentToLength(dhs_data, dhs_fastq)
-    # H3K27ac goes through a different filtering because 
-    h3k27ac_alignment_bam = mapExperimentToLength(h3k27ac_data, h3k27ac_fastq)
-    merge_columns = ['Biosample term name','Biosample organism', 'Biosample treatments','Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods','Biosample genetic modifications categories','Biosample genetic modifications targets', 'Biosample genetic modifications gene targets', 'Assembly', 'Genome annotation', 'File format', 'File type', 'Output type']
-    # merge dhs and h3k27ac
-    intersected = pd.merge(dhs_alignment_bam, h3k27ac_alignment_bam, how='inner', on=merge_columns, suffixes=('_Accessibility', '_H3K27ac'))
+    merge_columns = ['Biosample term name','Biosample organism', 'Biosample treatments','Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods','Biosample genetic modifications categories','Biosample genetic modifications targets', 'Biosample genetic modifications gene targets', 'File assembly', 'Genome annotation', 'File format', 'File type', 'Output type']
+    if args.h3k27ac is not None and args.h3k27ac_fastq is not None:
+        h3k27ac_data, h3k27ac_fastq = load_data(args.h3k27ac, args.h3k27ac_fastq)
+        h3k27ac_alignment_bam = mapExperimentToLength(h3k27ac_data, h3k27ac_fastq)
+        intersected = pd.merge(dhs_alignment_bam, h3k27ac_alignment_bam, how='inner', on=merge_columns, suffixes=('_Accessibility', '_H3K27ac'))
+    else:
+        intersected_columns = list(dhs_alignment_bam.columns)
+        columns_to_rename = [col for col in intersected_columns if col not in merge_columns]
+        intersected = dhs_alignment_bam.rename(columns={key:value+"_Accessibility" for key,value in zip(list(columns_to_rename), list(columns_to_rename))})
+
     if args.atac is not None and args.atac_fastq is not None:
         atac_df = pd.read_csv(args.atac, sep="\t")
         atac_fastq = pd.read_csv(args.atac_fastq, sep="\t")
@@ -94,7 +92,10 @@ def download_single_bam(bam):
 
 def downloadFiles(args, df):
     # get download links and start downloading 
-    download_links = df[['File download URL_Accessibility', 'File download URL_H3K27ac']].melt(value_name='download_links').drop_duplicates()
+    if args.h3k27ac is not None:
+        download_links = df[['File download URL_Accessibility', 'File download URL_H3K27ac']].melt(value_name='download_links').drop_duplicates()
+    else:
+        download_links = df[['File download URL_Accessibility']].melt(value_name='download_links').drop_duplicates()
     outfile=os.path.join(args.outdir, "linkstodownload.txt")
     download_links[['download_links']].to_csv( outfile, sep="\t", index=False, header=None)
     
@@ -103,7 +104,7 @@ def downloadFiles(args, df):
 #    if args.apply_pool:
 #        with Pool(int(args.threads)) as p:
 #            p.map(download_single_bam, zip(list(download_links['download_links']), itertools.repeat(args.data_outdir)))
-#   
+# 
 #    else:
 #        for link in list(download_links['download_links']):
 #            download_single_bam(link)
@@ -112,10 +113,13 @@ def downloadFiles(args, df):
 def save_paired_single_end_files(args, metadata):
     for col, title in zip(["single-ended", "paired-ended"], ["singleend", "pairedend"]):
         paired = metadata['File accession_Accessibility'].loc[metadata['Run type_Accessibility']==str(col)].drop_duplicates()
-        paired_h3k27ac = metadata['File accession_H3K27ac'].loc[metadata['Run type_H3K27ac']==str(col)].drop_duplicates()
-        combined_paired = pd.concat([paired, paired_h3k27ac])
-        combined_paired.to_csv(os.path.join(args.outdir, "unique_{}_h3k27ac_dhs_files.tsv".format(str(title))), sep="\t", index=False)
-
+        if args.h3k27ac is not None:
+            paired_h3k27ac = metadata['File accession_H3K27ac'].loc[metadata['Run type_H3K27ac']==str(col)].drop_duplicates()
+            combined_paired = pd.concat([paired, paired_h3k27ac])
+            combined_paired.to_csv(os.path.join(args.outdir, "unique_{}_h3k27ac_dhs_files.tsv".format(str(title))), sep="\t", index=False)
+        else:
+            combined_paired = paired
+            combined_paired.to_csv(os.path.join(args.outdir, "unique_{}_h3k27ac_dhs_files.tsv".format(str(title))), sep="\t", index=False)
 
 if __name__=="__main__":
     main()

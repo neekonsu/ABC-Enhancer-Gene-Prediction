@@ -6,16 +6,23 @@ outdir=$2
 input_file=$3
 threads=$4
 
+m=()
 while read p;
 do
 	a=($p)
 	echo ${a[1]} ${a[2]} ${a[3]}
-	BASENAME="${a[1]%%.*}"
-	if [ ${#a[@]} -gt 3 ]
-	then
-		samtools merge $outdir/${BASENAME}_pooled.bam $indir/${a[1]} $indir/${a[2]} $indir/${a[3]} --threads $threads
-	else
-		samtools merge $outdir/${BASENAME}_pooled.bam $indir/${a[1]} $indir/${a[2]} --threads $threads
-	fi
+	len_=$((${#a[@]}-1))
+	for file in $(eval echo {1..$len_});
+	do
+		echo $file
+		m+=("$indir/${a[$file]}")
+	done
+
+	samtools merge $outdir/${a[$len_]} $m &
+#	then
+#		samtools merge $outdir/${a[4]} $indir/${a[1]} $indir/${a[2]} $indir/${a[3]} --threads $threads &
+#	else
+#		samtools merge $outdir/${a[3]} $indir/${a[1]} $indir/${a[2]} --threads $threads &
+#	fi
 done < 	$input_file
 
