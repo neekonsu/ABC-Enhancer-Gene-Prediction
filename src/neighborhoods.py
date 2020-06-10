@@ -71,7 +71,6 @@ def load_genes(file,
     return genes, genes_for_class_assignment
 
 def annotate_genes_with_features(genes, 
-           tss1kb,
            genome_sizes,
            skip_gene_counts=False,
            features={},
@@ -90,9 +89,8 @@ def annotate_genes_with_features(genes,
     genes = count_features_for_bed(genes, bounds_bed, genome_sizes, features, outdir, "Genes", force=force, use_fast_count=use_fast_count)
     tsscounts = count_features_for_bed(tss1kb, tss1kb_file, genome_sizes, features, outdir, "Genes.TSS1kb", force=force, use_fast_count=use_fast_count)
     tsscounts = tsscounts.drop(['chr','start','end','score','strand'], axis=1)
-
-    tsscounts = tsscounts.rename(columns={'name': 'promoter_id'})
-    tsscounts['name'] = [str(name).split("_")[0] for name in tsscounts['promoter_id']]
+    
+#    tsscounts['name'] = [str(name).split("_")[0] for name in tsscounts['promoter_id']]
     merged = genes.merge(tsscounts, on="name", suffixes=['','.TSS1Kb'])
     
     access_col = default_accessibility_feature + ".RPKM.quantile.TSS1Kb"  
@@ -363,7 +361,6 @@ def isBigWigFile(filename):
     return(filename.endswith(".bw") or filename.endswith(".bigWig") or filename.endswith(".bigwig"))
 
 def count_features_for_bed(df, bed_file, genome_sizes, features, directory, filebase, skip_rpkm_quantile=False, force=False, use_fast_count=True):
-
     for feature, feature_bam_list in features.items():
         start_time = time.time()
         if isinstance(feature_bam_list, str): 

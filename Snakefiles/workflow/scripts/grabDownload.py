@@ -45,13 +45,11 @@ def load_data(bam, fastq):
     return dhs_data, dhs_fastq 
 
 def assignFiltersToDataFrame(args):
-    # TODO: figure out how to call fastq files + bam files  
     # open dataframes 
-
     # load data 
     dhs_data, dhs_fastq = load_data(args.dhs, args.dhs_fastq)
     dhs_alignment_bam = mapExperimentToLength(dhs_data, dhs_fastq)
-    merge_columns = ['Biosample term name','Biosample organism', 'Biosample treatments','Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods','Biosample genetic modifications categories','Biosample genetic modifications targets', 'Biosample genetic modifications gene targets', 'Assembly', 'Genome annotation', 'File format', 'File type', 'Output type']
+    merge_columns = ['Biosample term name','Biosample organism', 'Biosample treatments','Biosample treatments amount', 'Biosample treatments duration','Biosample genetic modifications methods','Biosample genetic modifications categories','Biosample genetic modifications targets', 'Biosample genetic modifications gene targets', 'File assembly', 'Genome annotation', 'File format', 'File type', 'Output type']
     if args.h3k27ac is not None and args.h3k27ac_fastq is not None:
         h3k27ac_data, h3k27ac_fastq = load_data(args.h3k27ac, args.h3k27ac_fastq)
         h3k27ac_alignment_bam = mapExperimentToLength(h3k27ac_data, h3k27ac_fastq)

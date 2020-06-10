@@ -56,7 +56,7 @@ def processCellType(args):
     os.makedirs(args.outdir, exist_ok=True)
 
     #Setup Genes
-    genes, genes_for_class_assignment, tss = load_genes(file = args.genes, 
+    genes, genes_for_class_assignment = load_genes(file = args.genes, 
                                                 tss_file = args.tss, 
                                                 ue_file = args.ubiquitously_expressed_genes,
                                                 chrom_sizes = args.chrom_sizes,
@@ -68,7 +68,7 @@ def processCellType(args):
                                                 class_gene_file = args.genes_for_class_assignment)
 
     annotate_genes_with_features(genes = genes,
-                                    tss1kb = tss,
+                                    
                                     genome_sizes = args.chrom_sizes, 
                                     use_fast_count = (not args.use_secondary_counting_method),
                                     default_accessibility_feature = params['default_accessibility_feature'],
@@ -77,7 +77,7 @@ def processCellType(args):
 
     #Setup Candidate Enhancers
     load_enhancers(genes=genes_for_class_assignment, 
-                    tss = tss, 
+                
                     genome_sizes=args.chrom_sizes, 
                     candidate_peaks=args.candidate_enhancer_regions, 
                     skip_rpkm_quantile=args.skip_rpkm_quantile, 

@@ -107,10 +107,10 @@ def getExperimentsCombined(args,metadata, biosample_entries):
             else:
                 col1, _ = check_x_and_y(biosample_entry, column=['Biological replicate(s)_Accessibility'])
             if col1 != -1:
-                to_combine[str(biosample).replace(",", "").replace(" ", "_")] = [str(entry)+".bam" for entry in biosample_entry.loc[:,col1]]
                 index = list(biosample_entry.index.astype('int'))
                 df.loc[index[0], col1] = str(biosample_entry.loc[index[0], col1]) + "_pooled"
                 df = df.drop(index[1:])
+                to_combine[str(biosample).replace(",", "").replace(" ", "_")] = list(set([str(entry)+".bam" for entry in biosample_entry.loc[:,col1]])) + [str(biosample_entry.loc[index[0], col1]) + "_pooled.bam"]
             else:
                 index = list(biosample_entry.index.astype('int'))
                 df = df.drop(index[1:])
@@ -143,7 +143,6 @@ def obtainDuplicated(args, subset_intersected):
     df_biological_rep = df_biological['Biosample term name'].drop_duplicates()
 
     to_combine, metadata_unique = getExperimentsCombined(args, duplicates, df_biological_rep)
-    metadata_unique.to_csv("test.txt", sep="\t", index=False)
     with open(os.path.join(args.outdir, "Experiments_ToCombine.txt.tmp"), "w") as f:
         for key, value in zip(to_combine.keys(), to_combine.values()):
             f.write(str(key))
