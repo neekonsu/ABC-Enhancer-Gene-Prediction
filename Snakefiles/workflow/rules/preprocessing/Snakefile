@@ -16,11 +16,11 @@ f.close()
 with open(config['output_data_dir']+"/input_files/Experiments_ToCombine.txt", "r") as file_a:
 	FILES = [line.split("\t")[1] for line in file_a.readlines()]
 file_a.close()
-FILES_OUTPUT = [file.split("    ")[-1].split(".")[0] for file in FILES]
+FILES_OUTPUT = [file.split("    ")[-1].split(".bam")[0] for file in FILES]
 print(FILES_OUTPUT)
 
 FINAL_FILES=[]
-FINAL_FILES.extend(expand(config['output_data_dir']+"/data/{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
+#FINAL_FILES.extend(expand(config['output_data_dir']+"/data/{pooled_samples}.nodup.bam", pooled_samples=PAIREDEND_SAMPLES))
 FINAL_FILES.extend(expand(config['output_data_dir']+"/data/{samples}.bam", samples=FILES_OUTPUT))
 
 print(PAIREDEND_SAMPLES)
