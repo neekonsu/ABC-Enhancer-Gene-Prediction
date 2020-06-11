@@ -42,9 +42,9 @@ suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(caTools))
 
 option.list <- list(
-  make_option("--predictions", type="character", help="Predictions file (accepts comma delimited list)"),
+  make_option("--predictions", type="character", help="Predictions table"),
   make_option("--experimentalData", type="character", help="File listing perturbational data (accepts comma delimited list)"),
-  make_option("--experimentalPositiveColumn", type="character", default="Regulated", help="Column of experimentalData to consider an experimental positive"),
+  make_option("--experimentalPositiveColumn", type="character", default="Regulated", help="Column of experimentalData to consider an experimental positive or negative"),
   make_option("--plotConfig", type="character", help="File describing which plots to make"),
   make_option("--predConfig", type="character", help="File describing how to aggregate/fill prediction columns"),
   make_option("--ignoreExptMissingPredictions", default=FALSE, action="store_true", help="Ignore EG pairs which do not have predictions. Do not fill based on predConfig"),
