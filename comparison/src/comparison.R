@@ -2,7 +2,7 @@ library(GenomicRanges)
 
 qcExpt <- function(expt, opt) {
   #Check for duplicate experiments
-  dupe <- any(duplicated(expt[, c("CellType","GeneSymbol","chrElement","startElement","endElement")] ))
+  dupe <- any(duplicated(expt[, c("CellType","GeneSymbol","chrPerturbationTarget","startPerturbationTarget","endPerturbationTarget")] ))
   if (dupe) {
     print("Error: The experimental data file contains duplicate experiments!")
     stop()
@@ -38,7 +38,7 @@ combineSingleExptPred <- function(expt, pred, pred.name, config, outdir, fill.mi
   config <- subset(config, pred.col %in% colnames(pred))
   
   pred.gr <- with(pred, GRanges(paste0(CellType,":",chrElement,":",GeneSymbol), IRanges(startElement, endElement)))
-  expt.gr <- with(expt, GRanges(paste0(CellType,":",chrElement,":",GeneSymbol), IRanges(startElement, endElement)))
+  expt.gr <- with(expt, GRanges(paste0(CellType,":",chrPerturbationTarget,":",GeneSymbol), IRanges(startPerturbationTarget, endPerturbationTarget)))
   ovl <- GenomicRanges::findOverlaps(expt.gr, pred.gr)
   
   #Merge predictions with experimental data
@@ -47,7 +47,7 @@ combineSingleExptPred <- function(expt, pred, pred.name, config, outdir, fill.mi
   #Sometimes a perturbed element will overlap multiple model elements (eg in the case of a large deletion)
   #In these cases need to summarize, Eg sum ABC.Score across model elements overlapping the deletion
   #This requires a config file describing how each prediction column should be aggregated
-  agg.cols <- c("chrElement","startElement","endElement","GeneSymbol","CellType","Significant","Regulated","EffectSize") #"class",
+  agg.cols <- c("chrPerturbationTarget","startPerturbationTarget","endPerturbationTarget","GeneSymbol","CellType","Significant","Regulated","EffectSize") #"class",
   merged <- collapseEnhancersOverlappingMultiplePredictions(merged, config, agg.cols)
   
   #Experimental data missing predictions
@@ -62,7 +62,7 @@ combineSingleExptPred <- function(expt, pred, pred.name, config, outdir, fill.mi
   if (fill.missing) {
     expt.missing.predictions <- fillMissingPredictions(expt.missing.predictions, config, agg.cols)
     cols.we.want <- c(agg.cols, config$pred.col) #'class'
-    merged <- rbind(merged, expt.missing.predictions[, ..cols.we.want])
+    merged <- rbind(merged, expt.missing.predictions[, ..cols.we.want], fill=TRUE)
     print("Experimental data missing predictions filled. Will be considered in PR curve!")
     print(expt.missing.predictions[, ..cols.we.want])
   } else {

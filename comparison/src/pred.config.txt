@@ -7,7 +7,3 @@ hic.distance	mean	0	FALSE
 ATAC_HiC.Score	sum	0	FALSE
 ATAC_powerlaw.Score	sum	0	FALSE
 pvalue	min	1	TRUE
-
-
-
-
