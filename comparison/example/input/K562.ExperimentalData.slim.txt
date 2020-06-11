@@ -1,4 +1,4 @@
-chrElement	startElement	endElement	GeneSymbol	EffectSize	CellType	IncludeInModel	Significant	Regulated
+chrPerturbationTarget	startPerturbationTarget	endPerturbationTarget	GeneSymbol	EffectSize	CellType	IncludeInModel	Significant	Regulated
 chrX	48659028	48659074	GATA1	-0.33	K562	TRUE	TRUE	TRUE
 chrX	48641372	48641493	HDAC6	-0.42	K562	TRUE	TRUE	TRUE
 chrX	48659028	48659074	HDAC6	-0.22	K562	TRUE	TRUE	TRUE
