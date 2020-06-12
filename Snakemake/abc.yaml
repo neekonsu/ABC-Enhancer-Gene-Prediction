@@ -1,0 +1,11 @@
+
+
+code_dir: "./"
+base_output_dir: "Snakemake/out/"
+
+chrom_sizes: "example_chr22/reference/chr22"
+regions_blacklist: "reference/wgEncodeHg19ConsensusSignalArtifactRegions.bed"
+gene_annot: "example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed"
+qnorm: "src/EnhancersQNormRef.K562.txt"
+ubiquitous_genes: "reference/UbiquitouslyExpressedGenesHG19.txt"
+

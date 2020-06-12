@@ -1,0 +1,3 @@
+
+		python ./src/run.neighborhoods.py 		--candidate_enhancer_regions Snakemake/out//K562_chr22/Peaks/NA_peaks.narrowPeak.sorted.candidateRegions.bed 		--DHS ./example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,/seq/lincRNA/RAP/Promoters/ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam 		--ATAC  		--H3K27ac ./example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam 		--chrom_sizes example_chr22/reference/chr22 		--genes example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed 		--ubiquitously_expressed_genes reference/UbiquitouslyExpressedGenesHG19.txt 		--qnorm src/EnhancersQNormRef.K562.txt 		--outdir Snakemake/out//K562_chr22/Neighborhoods/ 
+		

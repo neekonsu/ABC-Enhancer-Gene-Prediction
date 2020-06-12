@@ -1,0 +1,3 @@
+
+		python ./src/predict.py 		--enhancers Snakemake/out//K562_chr22/Neighborhoods/EnhancerList.txt 		--genes Snakemake/out//K562_chr22/Neighborhoods/GeneList.txt 		--outdir Snakemake/out//K562_chr22/Predictions/ 		--HiCdir ./example_chr22/input_data/HiC/raw 		--hic_resolution 5000 		--scale_hic_using_powerlaw 		--threshold .02 		--make_all_putative 		--cellType K562_chr22 
+		

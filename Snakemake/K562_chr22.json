@@ -1,0 +1,17 @@
+{"K562_chr22":{
+	"macs_pval":".1",
+	"macs_type":"BAM",
+	"macs_genome":"hs",
+	"gene_annot_collapsed_tss":"./example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.TSS500bp.chr22.bed",
+	"gene_annot":"./example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed",
+	"accessibility_file":"./example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam", 
+	"peakExtendFromSummit":"250",
+	"nStrongestPeaks":"3000",
+	"DHS": "./example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,/seq/lincRNA/RAP/Promoters/ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam", 
+	"ATAC": "", 
+	"H3K27ac":"./example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam",
+	"hic_dir":"./example_chr22/input_data/HiC/raw",
+	"hic_resolution":"5000",
+	"threshold":".02"
+	}
+}

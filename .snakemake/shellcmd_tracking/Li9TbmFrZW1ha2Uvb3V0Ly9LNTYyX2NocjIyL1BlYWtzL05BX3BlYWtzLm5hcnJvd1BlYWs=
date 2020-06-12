@@ -1,0 +1,3 @@
+ 
+		macs2 callpeak -f BAM -g hs -p .1 --call-summits --outdir ./Snakemake/out//K562_chr22/Peaks/ -t ./example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam 
+		

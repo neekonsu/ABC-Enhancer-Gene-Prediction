@@ -1,0 +1,3 @@
+ 
+		bedtools sort -faidx example_chr22/reference/chr22 -i Snakemake/out//K562_chr22/Peaks/NA_peaks.narrowPeak > Snakemake/out//K562_chr22/Peaks/NA_peaks.narrowPeak.sorted
+		

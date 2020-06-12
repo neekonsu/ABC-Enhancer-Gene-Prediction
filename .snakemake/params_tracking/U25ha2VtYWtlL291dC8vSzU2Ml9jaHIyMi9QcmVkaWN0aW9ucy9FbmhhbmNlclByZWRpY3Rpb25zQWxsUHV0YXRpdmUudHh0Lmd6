@@ -1,0 +1,5 @@
+'./example_chr22/input_data/HiC/raw'
+'./src/predict.py'
+'.02'
+'5000'
+'K562_chr22'

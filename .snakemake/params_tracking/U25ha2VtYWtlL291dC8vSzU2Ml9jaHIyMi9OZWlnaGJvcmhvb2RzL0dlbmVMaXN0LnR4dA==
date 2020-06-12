@@ -1,0 +1,8 @@
+''
+'./example_chr22/input_data/Chromatin/ENCFF384ZZM.chr22.bam'
+'./example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep1.chr22.bam,/seq/lincRNA/RAP/Promoters/ABC-Enhancer-Gene-Prediction/example_chr22/input_data/Chromatin/wgEncodeUwDnaseK562AlnRep2.chr22.bam'
+'./src/run.neighborhoods.py'
+'example_chr22/reference/RefSeqCurated.170308.bed.CollapsedGeneBounds.chr22.bed'
+'example_chr22/reference/chr22'
+'reference/UbiquitouslyExpressedGenesHG19.txt'
+'src/EnhancersQNormRef.K562.txt'
