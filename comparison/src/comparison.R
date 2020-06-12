@@ -1,6 +1,7 @@
 library(GenomicRanges)
 
 qcExpt <- function(expt, opt) {
+  print("Running QC on experimental data")
   #Check for duplicate experiments
   dupe <- any(duplicated(expt[, c("CellType","GeneSymbol","chrPerturbationTarget","startPerturbationTarget","endPerturbationTarget")] ))
   if (dupe) {
@@ -26,6 +27,30 @@ qcExpt <- function(expt, opt) {
   }
 }
 
+qcPrediction <- function(pred.list, pred.config)  {
+  # Ensure that the fill value for each prediction column is at the extreme end of its range
+  print("Running QC on predictions")
+
+  doOnePred <- function(pred, config) {
+    pred <- as.data.table(pred)
+    this.cols <- intersect(colnames(pred), config$pred.col)
+    lapply(this.cols, function(s) {
+      qcCol(s, 
+            pred[, ..s],
+            subset(config, pred.col == s)$fill.val, 
+            subset(config, pred.col == s)$lowerIsMoreConfident)
+      })
+  }
+
+  qcCol <- function(col.name, colData, fill.val, isInverted) {
+    #For each prediction column check that its missing fill val is at the extreme end of its range
+    isBad <- (isInverted & fill.val < pmin(colData)) | (!isInverted & fill.val > pmin(colData))
+    suppressWarnings(if (isBad) stop(paste0("Fill val for column ", col.name, " is not at the extreme of its range!")))
+  }
+
+  dummy <- lapply(pred.list, function(s) doOnePred(s, config = pred.config))
+}
+
 combineAllExptPred <- function(expt, pred.list, config, outdir, fill.missing) {
   merged.list <- lapply(names(pred.list), function(s) combineSingleExptPred(expt = expt, pred = pred.list[[s]], pred.name = s, config = config, outdir = outdir, fill.missing = fill.missing))
   merged <- Reduce(function(x, y) merge(x, y, all=TRUE), merged.list)
@@ -35,6 +60,7 @@ combineAllExptPred <- function(expt, pred.list, config, outdir, fill.missing) {
 
 combineSingleExptPred <- function(expt, pred, pred.name, config, outdir, fill.missing=TRUE) {
   #Subset config to columns that actuall appear. Otherwise code will fail
+  print(paste0("Overlapping predictions for predictor: ", pred.name))
   config <- subset(config, pred.col %in% colnames(pred))
   
   pred.gr <- with(pred, GRanges(paste0(CellType,":",chrElement,":",GeneSymbol), IRanges(startElement, endElement)))
@@ -57,8 +83,8 @@ combineSingleExptPred <- function(expt, pred, pred.name, config, outdir, fill.mi
   #However, this code doesn't work if the predictor did not make a prediction for this gene.
   expt.missing.predictions <- expt[setdiff(seq(nrow(expt)), queryHits(ovl)),]
   write.table(expt.missing.predictions, file.path(outdir, "expt.missing.predictions.txt"), sep="\t", quote=F, col.names=T, row.names=F)
-  print("The following experimental data is not present in predictions file: ")
-  print(expt.missing.predictions[, ..agg.cols])
+  #print("The following experimental data is not present in predictions file: ")
+  #print(expt.missing.predictions[, ..agg.cols])
   if (fill.missing) {
     expt.missing.predictions <- fillMissingPredictions(expt.missing.predictions, config, agg.cols)
     cols.we.want <- c(agg.cols, config$pred.col) #'class'
@@ -67,6 +93,7 @@ combineSingleExptPred <- function(expt, pred, pred.name, config, outdir, fill.mi
     print(expt.missing.predictions[, ..cols.we.want])
   } else {
     print("Experimental data missing predictions ignored. Will not be considered in PR curve!")
+    print(expt.missing.predictions)
   }
 
   #Rename new columns based on prediction dataset name
@@ -334,7 +361,12 @@ loadFileString <- function(file.str, delim = ",") {
 
 loadPredictions <- function(pred.table) {
   #df <- fread(pred.table)
-  pred.list <- lapply(pred.table$path, function(s) loadFileString(s))
+  pred.list <- lapply(pred.table$path, function(s) {
+    print(paste0("Loading dataset: ", s))
+    df = loadFileString(s)
+    print(paste0("Dataset loaded with ", nrow(df), " rows"))
+    return(df)
+    })
   names(pred.list) <- pred.table$name
   return(pred.list)
 }

@@ -72,6 +72,7 @@ print("Reading input files")
 pred.table <- fread(opt$predictions)
 pred.list <- loadPredictions(pred.table)
 expt <- loadFileString(opt$experimentalData)
+print(paste0("Loaded experimental data with ", nrow(expt), " rows"))
 expt <- subset(expt, IncludeInModel)
 predConfig <- fread(opt$predConfig)
 plotConfig <- fread(opt$plotConfig)
@@ -80,6 +81,7 @@ plotConfig <- fread(opt$plotConfig)
 qcExpt(expt, opt)
 
 #QC Predictions
+qcPrediction(pred.list, predConfig)
 
 # Merge experimental data and predictions
 print("Merging experiment and predictions")
@@ -111,4 +113,4 @@ plotCellType <- function(cellType) {
       })
 }
 
-lapply(c('combined', unique(merged$CellType)), plotCellType)
+invisible(lapply(c('combined', unique(merged$CellType)), plotCellType))

@@ -1,4 +1,4 @@
-chrElement	startElement	endElement	GeneSymbol	CellType	Significant	Regulated	EffectSize	K562_K562HiC.ABC.Score	K562_K562HiC.distance	K562_AvgHiC.ABC.Score	K562_AvgHiC.distance	scatterplot.color	K562_K562HiC.ABC.Score.pred.class	K562_AvgHiC.ABC.Score.pred.class	K562_K562HiC.distance.pred.class
+chrPerturbationTarget	startPerturbationTarget	endPerturbationTarget	GeneSymbol	CellType	Significant	Regulated	EffectSize	K562_K562HiC.ABC.Score	K562_K562HiC.distance	K562_AvgHiC.ABC.Score	K562_AvgHiC.distance	scatterplot.color	K562_K562HiC.ABC.Score.pred.class	K562_AvgHiC.ABC.Score.pred.class	K562_K562HiC.distance.pred.class
 chrX	46655945	46656445	GATA1	K562	FALSE	FALSE	0.00261436	3.3e-05	1988754	4.2e-05	1988754	Not Significant	TN	TN	FP
 chrX	46655945	46656445	HDAC6	K562	FALSE	FALSE	0.012969657	3.5e-05	2004195	3.8e-05	2004195	Not Significant	TN	TN	FP
 chrX	46655945	46656445	PLP2	K562	FALSE	FALSE	-0.01265429	3.1e-05	2371956	3.8e-05	2371956	Not Significant	TN	TN	FP
