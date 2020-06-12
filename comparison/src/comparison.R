@@ -80,9 +80,10 @@ combineSingleExptPred <- function(expt, pred, pred.name, config, outdir, fill.mi
   #A tested enhancer element may not have a prediction
   #For ABC this is typically the case if the tested element does not overlap a DHS peak.
   #In this case we need to fill the predictions table
-  #However, this code doesn't work if the predictor did not make a prediction for this gene.
   expt.missing.predictions <- expt[setdiff(seq(nrow(expt)), queryHits(ovl)),]
-  write.table(expt.missing.predictions, file.path(outdir, "expt.missing.predictions.txt"), sep="\t", quote=F, col.names=T, row.names=F)
+  dir.create(file.path(outdir, "experimentalDataMissingPredictions", pred.name), recursive = TRUE)
+  write.table(expt.missing.predictions, file.path(outdir, "experimentalDataMissingPredictions", pred.name, "expt.missing.predictions.txt"), sep="\t", quote=F, col.names=T, row.names=F)
+
   #print("The following experimental data is not present in predictions file: ")
   #print(expt.missing.predictions[, ..agg.cols])
   if (fill.missing) {
