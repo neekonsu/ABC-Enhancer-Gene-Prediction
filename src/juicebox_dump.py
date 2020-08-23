@@ -10,7 +10,7 @@ def parseargs():
     parser.add_argument('--outdir', default=".")
     parser.add_argument('--include_raw', action="store_true", help="Download raw matrix in addtion to KR")
     parser.add_argument('--chromosomes', default="all", help="comma delimited list of chromosomes to download")
-    parser.add_argument('--skip_gzip', action="store_true", help="dont gzip hic files")
+    parser.add_argument('--skip_gzip', default="True", action="store_true", help="dont gzip hic files")
 
     return parser.parse_args()
 
