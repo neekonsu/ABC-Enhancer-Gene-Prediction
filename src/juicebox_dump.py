@@ -28,18 +28,18 @@ def main(args):
         out = subprocess.getoutput(command)
 
         ## Download observed matrix with KR normalization
-        command = args.juicebox + " dump observed KR {0} {1} {1} BP {3} {2}/chr{1}.KRobserved".format(args.hic_file, chromosome, outdir, args.resolution)
+        command = args.juicebox + " dump observed KR {0} {1} {1} BP {3} {2}chr{1}.KRobserved".format(args.hic_file, chromosome, outdir, args.resolution)
         print(command)
         out = subprocess.getoutput(command)
         if not args.skip_gzip: 
-            run_command("gzip {0}/chr{1}.KRobserved".format(outdir, chromosome))
+            run_command("gzip {0}chr{1}.KRobserved".format(outdir, chromosome))
 
         ## Download KR norm file
         command = args.juicebox + " dump norm KR {0} {1} BP {3} {2}/chr{1}.KRnorm".format(args.hic_file, chromosome, outdir, args.resolution)
         out = subprocess.getoutput(command)
         print(command)
         if not args.skip_gzip: 
-            run_command("gzip {0}/chr{1}.KRnorm".format(outdir, chromosome))
+            run_command("gzip {0}chr{1}.KRnorm".format(outdir, chromosome))
         
         if args.include_raw:
             ## Download raw observed matrix
@@ -47,7 +47,7 @@ def main(args):
             print(command)
             out = subprocess.getoutput(command)
             if not args.skip_gzip:
-                run_command("gzip {0}/chr{1}.RAWobserved".format(outdir, chromosome))
+                run_command("gzip {0}chr{1}.RAWobserved".format(outdir, chromosome))
 
 if __name__ == '__main__':
     args = parseargs()
