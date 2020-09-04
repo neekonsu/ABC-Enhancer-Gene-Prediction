@@ -365,7 +365,7 @@ def count_bam(bamfile, bed_file, output, genome_sizes, use_fast_count=True, verb
     # Check for successful finish -- BEDTools can run into memory problems
     #import pdb; pdb.set_trace()
     err = str(stderrdata, 'utf-8')
-    if ("terminated" not in err) and ("Error" not in err) and ("ERROR" not in err) and any(data):
+    if ("terminated" not in err) and ("Error" not in err) and ("ERROR" not in err) and any(stderrdata):
         print("BEDTools completed successfully. \n")
         completed = True
     else:
