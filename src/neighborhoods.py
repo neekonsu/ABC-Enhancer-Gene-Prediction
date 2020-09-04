@@ -442,8 +442,8 @@ def count_single_feature_for_bed(df, bed_file, genome_sizes, feature_bam, featur
     domain_counts.rename(columns={score_column: featurecount}, inplace=True)
     domain_counts['chr'] = domain_counts['chr'].astype('str')
 
-    # df = df.merge(domain_counts.drop_duplicates())
-    df = smart_merge(df, domain_counts.drop_duplicates())
+    df = df.merge(domain_counts.drop_duplicates())
+    #df = smart_merge(df, domain_counts.drop_duplicates())
 
     assert df.shape[0] == orig_shape, "Dimension mismatch"
 
