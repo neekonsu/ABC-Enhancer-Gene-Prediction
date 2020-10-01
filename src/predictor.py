@@ -194,6 +194,8 @@ def make_gene_prediction_stats(pred, args):
 
     summ2 = pred.loc[pred['class'] != 'promoter',:].groupby(['chr','TargetGene','TargetGeneTSS']).agg({args.score_column : lambda x: sum(x > args.threshold)})
     summ2.columns = ['nDistalEnhancersPredicted']
+    summ1.head()
+    summ2.head()
     summ1 = summ1.merge(summ2, left_index=True, right_index=True)
 
     summ1.to_csv(os.path.join(args.outdir, "GenePredictionStats.txt"), sep="\t", index=True)
